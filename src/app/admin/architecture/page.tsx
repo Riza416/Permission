@@ -414,9 +414,202 @@ export default function ArchitecturePage() {
         </p>
       </div>
 
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          SIMPLIFIED OVERVIEW
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="bg-white border-2 border-gray-900 rounded-2xl shadow-md overflow-hidden">
+        <div className="bg-gray-900 px-6 py-4">
+          <h2 className="text-base font-bold text-white">Simplified Overview</h2>
+          <p className="text-xs text-gray-400 mt-0.5">How the permission system flows from top to bottom</p>
+        </div>
+        <div className="p-6">
+          <div className="flex flex-col items-center">
+
+            {/* ── ORGANIZATION ── */}
+            <div className="w-full max-w-2xl border-2 border-gray-800 rounded-xl overflow-hidden">
+              <div className="bg-gray-800 px-5 py-2.5 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-white/70" />
+                <span className="text-white font-bold text-sm">Organization</span>
+                <span className="text-gray-400 text-[10px] ml-auto">e.g. Acme Corp</span>
+              </div>
+              <div className="bg-gray-50 px-5 py-3 text-[11px] text-gray-600 space-y-1">
+                <p className="flex items-center gap-2">
+                  <Shield className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                  <span><strong className="text-gray-800">Super Admin</strong> is created with the organization (exactly one, cannot self-promote)</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Arrow: Super Admin creates entities */}
+            <div className="flex flex-col items-center py-1">
+              <div className="w-0.5 h-4 bg-gray-300" />
+              <span className="text-[10px] text-amber-600 font-semibold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                Super Admin creates entities &amp; assigns admins to them
+              </span>
+              <ArrowDown className="w-3 h-3 text-gray-400" />
+            </div>
+
+            {/* ── ENTITIES ── */}
+            <div className="w-full max-w-2xl grid grid-cols-3 gap-3">
+              {["Acme US", "Acme EU", "Acme APAC"].map((name) => (
+                <div key={name} className="border-2 border-indigo-300 rounded-lg overflow-hidden">
+                  <div className="bg-indigo-100 px-3 py-1.5 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                    <span className="text-xs font-bold text-indigo-700">{name}</span>
+                  </div>
+                  <div className="px-3 py-2 text-[10px] text-gray-500">
+                    Isolated data boundary
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Arrow: Admin creates groups */}
+            <div className="flex flex-col items-center py-1">
+              <div className="w-0.5 h-4 bg-gray-300" />
+              <span className="text-[10px] text-blue-600 font-semibold bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                Admins create groups &amp; assign permissions from the registry
+              </span>
+              <ArrowDown className="w-3 h-3 text-gray-400" />
+            </div>
+
+            {/* ── GROUPS ── */}
+            <div className="w-full max-w-2xl grid grid-cols-4 gap-2">
+              {[
+                { name: "Finance", color: "border-blue-300 bg-blue-50" },
+                { name: "Operations", color: "border-emerald-300 bg-emerald-50" },
+                { name: "Compliance", color: "border-purple-300 bg-purple-50" },
+                { name: "Treasury Ops", color: "border-cyan-300 bg-cyan-50" },
+              ].map((g) => (
+                <div key={g.name} className={`border-2 rounded-lg p-2.5 text-center ${g.color}`}>
+                  <FolderKey className="w-4 h-4 text-gray-400 mx-auto mb-1" />
+                  <p className="text-xs font-semibold text-gray-700">{g.name}</p>
+                  <p className="text-[10px] text-gray-400">Group</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Arrow: Permissions are assigned to groups */}
+            <div className="flex flex-col items-center py-1">
+              <div className="w-0.5 h-4 bg-gray-300" />
+              <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                each group gets permissions from the registry
+              </span>
+              <ArrowDown className="w-3 h-3 text-gray-400" />
+            </div>
+
+            {/* ── PERMISSION REGISTRY ── */}
+            <div className="w-full max-w-2xl border-2 border-emerald-300 rounded-xl overflow-hidden">
+              <div className="bg-emerald-100 px-5 py-2.5 flex items-center gap-2">
+                <Key className="w-4 h-4 text-emerald-600" />
+                <span className="text-sm font-bold text-emerald-800">Permission Registry</span>
+                <span className="text-emerald-500 text-[10px] ml-auto">system-defined, single source of truth</span>
+              </div>
+              <div className="bg-white p-4">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider col-span-2 mb-1">Platform Permissions</p>
+                  {[
+                    "create_transactions",
+                    "approve_transactions",
+                    "create_invoices",
+                    "view_reporting",
+                    "edit_settings",
+                    "create_new_client_users",
+                    "request_user_resets",
+                    "deactivate_client_users",
+                  ].map((p) => (
+                    <span key={p} className="text-[10px] font-mono text-gray-500 py-0.5">{p}</span>
+                  ))}
+                  <div className="col-span-2 border-t border-gray-100 my-2" />
+                  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider col-span-2 mb-1">
+                    Custody Wallet Permissions
+                    <span className="ml-2 text-rose-500 font-normal normal-case">(wallets are just permissions like everything else)</span>
+                  </p>
+                  {[
+                    "custody.wallet.create",
+                    "custody.wallet.view",
+                    "custody.wallet.send_transactions",
+                    "custody.wallet.manage",
+                    "custody.wallet.assign_group",
+                  ].map((p) => (
+                    <span key={p} className="text-[10px] font-mono text-rose-600 py-0.5">{p}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Arrow: groups assigned to users */}
+            <div className="flex flex-col items-center py-1">
+              <div className="w-0.5 h-4 bg-gray-300" />
+              <span className="text-[10px] text-gray-500 font-semibold bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
+                users are added to groups &rarr; inherit all group permissions
+              </span>
+              <ArrowDown className="w-3 h-3 text-gray-400" />
+            </div>
+
+            {/* ── USERS ── */}
+            <div className="w-full max-w-2xl bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="w-4 h-4 text-gray-500" />
+                <span className="text-xs font-bold text-gray-700">Users</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { name: "Bob", group: "Finance", entity: "Acme US", perms: "transactions, invoices, wallet.view, wallet.send" },
+                  { name: "Carol", group: "Operations", entity: "Acme EU", perms: "transactions, invoices, wallet.view" },
+                  { name: "Dave", group: "Compliance", entity: "Acme US", perms: "view_reporting, wallet.view" },
+                  { name: "Eve", group: "Treasury Ops", entity: "Acme US", perms: "wallet.create, wallet.send, wallet.manage" },
+                ].map((u) => (
+                  <div key={u.name} className="bg-white border border-gray-200 rounded-lg p-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600">
+                        {u.name[0]}
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-800">{u.name}</p>
+                        <p className="text-[10px] text-gray-400">{u.group} &middot; {u.entity}</p>
+                      </div>
+                    </div>
+                    <p className="text-[9px] text-gray-400 mt-1.5 font-mono leading-relaxed">{u.perms}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Summary box */}
+            <div className="w-full max-w-2xl mt-4 bg-gray-900 text-white rounded-xl p-4">
+              <p className="text-xs font-bold mb-2">How it all connects</p>
+              <ol className="space-y-1.5 text-[11px] text-gray-300">
+                <li className="flex items-start gap-2">
+                  <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                  <span><strong className="text-white">Super Admin</strong> creates <strong className="text-indigo-300">entities</strong> and assigns admins to each entity</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="bg-blue-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                  <span><strong className="text-white">Admins</strong> create <strong className="text-emerald-300">groups</strong> and pick permissions from the <strong className="text-emerald-300">registry</strong> to assign to each group</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="bg-emerald-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                  <span>Wallet operations (<em>create, view, send, manage</em>) are <strong className="text-rose-300">just permissions in the registry</strong> &mdash; assigned to groups like any other permission</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="bg-gray-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+                  <span><strong className="text-white">Users</strong> are added to groups and inherit all permissions &mdash; including what they can do with wallets</span>
+                </li>
+              </ol>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          DETAILED SECTIONS BELOW
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+
       {/* High-level hierarchy diagram */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
-        <h2 className="text-sm font-semibold text-gray-800 mb-4">System Hierarchy</h2>
+        <h2 className="text-sm font-semibold text-gray-800 mb-4">System Hierarchy (Detailed)</h2>
         <div className="flex flex-col items-center">
           {/* Platform level */}
           <div className="w-full max-w-md bg-gray-900 text-white rounded-xl px-5 py-3 text-center">

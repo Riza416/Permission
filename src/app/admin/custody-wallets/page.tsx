@@ -571,18 +571,41 @@ function CreateWalletModal({
   onCreate,
 }: {
   onClose: () => void;
-  onCreate: (currency: string, label: string, entityId: string) => void;
+  onCreate: (currency: string, label: string, entityId: string, initialAssignments: WalletGroupAssignment[]) => void;
 }) {
   const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
   const [label, setLabel] = useState("");
+  const [groupAssignments, setGroupAssignments] = useState<Record<string, WalletCapability[]>>({});
 
-  // Only show entities for the default org (Acme Corp) in this mock
   const orgEntities = entities.filter((e) => e.organization_id === "org-acme");
+  const orgGroups = permissionGroups.filter((g) => g.organization_id === "org-acme");
+
+  function toggleGroup(groupId: string) {
+    setGroupAssignments((prev) => {
+      if (prev[groupId]) {
+        const next = { ...prev };
+        delete next[groupId];
+        return next;
+      }
+      return { ...prev, [groupId]: ["view"] };
+    });
+  }
+
+  function setGroupCaps(groupId: string, caps: WalletCapability[]) {
+    setGroupAssignments((prev) => ({ ...prev, [groupId]: caps }));
+  }
+
+  const assignments: WalletGroupAssignment[] = Object.entries(groupAssignments).map(([group_id, capabilities]) => ({
+    group_id,
+    capabilities,
+  }));
+
+  const hasAtLeastOneGroup = assignments.length > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">Create Custody Wallet</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -590,9 +613,13 @@ function CreateWalletModal({
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-5">
+          {/* Step 1: Label */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Wallet Label</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1.5">1</span>
+              Wallet Label
+            </label>
             <input
               type="text"
               value={label}
@@ -602,8 +629,12 @@ function CreateWalletModal({
             />
           </div>
 
+          {/* Step 2: Entity */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Assign to Entity</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1.5">2</span>
+              Assign to Entity
+            </label>
             <div className="space-y-2">
               {orgEntities.map((ent) => (
                 <button
@@ -620,28 +651,112 @@ function CreateWalletModal({
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">
-              The wallet will be scoped to this entity. Different entities can have different wallets with different group access.
-            </p>
           </div>
 
+          {/* Step 3: Currency */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Currency</label>
-            <div className="grid grid-cols-2 gap-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1.5">3</span>
+              Select Currency
+            </label>
+            <div className="grid grid-cols-3 gap-2">
               {currencies.map((c) => (
                 <button
                   key={c.code}
                   onClick={() => setSelectedCurrency(c.code)}
-                  className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                  className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-all ${
                     selectedCurrency === c.code
                       ? "border-blue-500 bg-blue-50 shadow-sm"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
-                  <span className={`px-2 py-1 rounded text-xs font-bold border ${c.color}`}>{c.code}</span>
-                  <span className="text-sm text-gray-700">{c.name}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${c.color}`}>{c.code}</span>
+                  <span className="text-xs text-gray-700">{c.name}</span>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Step 4: Initial group assignment */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1.5">4</span>
+              Assign to Groups
+              <span className="text-xs text-red-500 ml-1">*required</span>
+            </label>
+            <p className="text-[10px] text-gray-400 mb-2">
+              Select at least one group and choose their capabilities for this wallet.
+            </p>
+            <div className="space-y-2">
+              {orgGroups.map((group) => {
+                const isSelected = !!groupAssignments[group.id];
+                const caps = groupAssignments[group.id] ?? [];
+                return (
+                  <div
+                    key={group.id}
+                    className={`border-2 rounded-lg transition-all ${
+                      isSelected ? "border-blue-300 bg-blue-50/50" : "border-gray-200"
+                    }`}
+                  >
+                    <button
+                      onClick={() => toggleGroup(group.id)}
+                      className="w-full flex items-center gap-3 p-3 text-left"
+                    >
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                        isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300"
+                      }`}>
+                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                      </div>
+                      <div className="flex items-center gap-2 flex-1">
+                        <Users className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-800">{group.name}</span>
+                        {group.is_super_admin && (
+                          <Shield className="w-3.5 h-3.5 text-amber-500" />
+                        )}
+                      </div>
+                    </button>
+                    {isSelected && (
+                      <div className="px-3 pb-3 pt-1 flex flex-wrap gap-1.5">
+                        {walletCapabilities.map((cap) => {
+                          const isActive = caps.includes(cap.id);
+                          const style = capabilityStyles[cap.id];
+                          const Icon = style.icon;
+                          const isView = cap.id === "view";
+                          return (
+                            <button
+                              key={cap.id}
+                              disabled={isView}
+                              onClick={() => {
+                                let newCaps: WalletCapability[];
+                                if (cap.id === "manage") {
+                                  newCaps = isActive
+                                    ? caps.filter((c) => c !== "manage")
+                                    : ["view", "send_transactions", "manage"];
+                                } else if (cap.id === "send_transactions") {
+                                  newCaps = isActive
+                                    ? caps.filter((c) => c !== "send_transactions" && c !== "manage")
+                                    : [...caps.filter((c) => c !== "manage"), "send_transactions"];
+                                } else {
+                                  newCaps = caps;
+                                }
+                                setGroupCaps(group.id, newCaps);
+                              }}
+                              className={`flex items-center gap-1 px-2 py-1 rounded-md border text-[10px] font-medium transition-all ${
+                                isActive
+                                  ? `${style.bg} ${style.text} ${style.border}`
+                                  : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"
+                              } ${isView ? "cursor-default" : ""}`}
+                            >
+                              <Icon className="w-3 h-3" />
+                              {cap.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -657,9 +772,10 @@ function CreateWalletModal({
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">Cancel</button>
           <button
             onClick={() => {
-              if (selectedCurrency && label.trim() && selectedEntity) onCreate(selectedCurrency, label.trim(), selectedEntity);
+              if (selectedCurrency && label.trim() && selectedEntity && hasAtLeastOneGroup)
+                onCreate(selectedCurrency, label.trim(), selectedEntity, assignments);
             }}
-            disabled={!selectedCurrency || !label.trim() || !selectedEntity}
+            disabled={!selectedCurrency || !label.trim() || !selectedEntity || !hasAtLeastOneGroup}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Create Wallet
@@ -694,7 +810,7 @@ export default function CustodyWalletsPage() {
   });
   const uniqueCurrenciesInWallets = Array.from(new Set(wallets.map((w) => w.currency)));
 
-  function handleCreate(currency: string, label: string, entityId: string) {
+  function handleCreate(currency: string, label: string, entityId: string, initialAssignments: WalletGroupAssignment[]) {
     const curr = currencies.find((c) => c.code === currency);
     const newWallet: CustodyWallet = {
       id: `wallet-${currency.toLowerCase()}-${String(wallets.length + 1).padStart(2, "0")}`,
@@ -704,7 +820,7 @@ export default function CustodyWalletsPage() {
       address: `0x${Math.random().toString(16).slice(2, 42)}`,
       organization_id: "org-acme",
       entity_id: entityId,
-      group_assignments: [],
+      group_assignments: initialAssignments,
       status: "active",
       created_by: "usr-alice",
       created_at: new Date().toISOString(),
