@@ -17,6 +17,7 @@ import {
   Lock,
   ChevronDown,
   Wallet,
+  Network,
 } from "lucide-react";
 
 // --- Role Context ---
@@ -66,6 +67,7 @@ const navSections: NavSection[] = [
     restricted: () => false,
     items: [
       { label: "Roadmap", href: "/admin/roadmap", icon: Map },
+      { label: "Architecture", href: "/admin/architecture", icon: Network },
       { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     ],
   },
