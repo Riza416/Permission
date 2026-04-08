@@ -671,42 +671,90 @@ export default function ArchitecturePage() {
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
         <h2 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <Wallet className="w-4 h-4 text-gray-400" />
-          Custody Wallets &mdash; How They Fit In
+          Custody Wallets &mdash; Capability-Based Access
         </h2>
         <div className="flex flex-col items-center space-y-3">
-          <div className="w-full max-w-lg bg-rose-50 border-2 border-rose-200 rounded-xl p-4 text-center">
+          {/* Wallet */}
+          <div className="w-full max-w-2xl bg-rose-50 border-2 border-rose-200 rounded-xl p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Wallet className="w-5 h-5 text-rose-500" />
               <span className="text-sm font-bold text-rose-800">Custody Wallet</span>
+              <span className="text-[10px] bg-rose-200 text-rose-700 px-1.5 py-0.5 rounded-full font-medium">e.g. Treasury Wallet (BTC)</span>
             </div>
             <p className="text-[10px] text-rose-600">Created by users with <code className="bg-rose-100 px-1 rounded">custody.wallet.create</code></p>
-            <p className="text-[10px] text-rose-500 mt-1">Scoped by currency (BTC, ETH, USDC, etc.) and belongs to an organization</p>
+            <p className="text-[10px] text-rose-500 mt-1">Labelled, scoped by currency, and belongs to an organization</p>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col items-center">
-              <ArrowDown className="w-3 h-3 text-gray-400" />
-              <span className="text-[10px] text-gray-400 font-medium mt-1">groups assigned via</span>
-              <code className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded mt-0.5 text-gray-600">custody.wallet.assign_group</code>
-            </div>
+          <div className="flex flex-col items-center">
+            <ArrowDown className="w-3 h-3 text-gray-400" />
+            <span className="text-[10px] text-gray-400 font-medium mt-1">groups assigned with <strong>specific capabilities</strong> via</span>
+            <code className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded mt-0.5 text-gray-600">custody.wallet.assign_group</code>
           </div>
 
-          <div className="w-full max-w-lg grid grid-cols-3 gap-3">
-            {["Super Admin", "Finance", "Operations"].map((g) => (
-              <div key={g} className="bg-white border border-gray-200 rounded-lg p-3 text-center">
-                <FolderKey className="w-4 h-4 text-gray-400 mx-auto mb-1" />
-                <p className="text-xs font-medium text-gray-700">{g}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">Group</p>
+          {/* Capability levels */}
+          <div className="w-full max-w-2xl">
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2 text-center">
+              Three Capability Levels per Group Assignment
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 text-center">
+                <Eye className="w-5 h-5 text-blue-500 mx-auto mb-1.5" />
+                <p className="text-xs font-bold text-blue-700">View Only</p>
+                <p className="text-[10px] text-blue-500 mt-1">See balances, transaction history, and addresses</p>
               </div>
-            ))}
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-3 text-center">
+                <ArrowRight className="w-5 h-5 text-amber-500 mx-auto mb-1.5" />
+                <p className="text-xs font-bold text-amber-700">Send Transactions</p>
+                <p className="text-[10px] text-amber-500 mt-1">Create and submit transactions from the wallet (includes View)</p>
+              </div>
+              <div className="bg-rose-50 border-2 border-rose-200 rounded-lg p-3 text-center">
+                <Shield className="w-5 h-5 text-rose-500 mx-auto mb-1.5" />
+                <p className="text-xs font-bold text-rose-700">Full Manage</p>
+                <p className="text-[10px] text-rose-500 mt-1">Settings, freeze/unfreeze, group assignment (includes all)</p>
+              </div>
+            </div>
           </div>
 
           <ArrowDown className="w-3 h-3 text-gray-400" />
 
-          <div className="w-full max-w-lg bg-gray-50 border border-gray-200 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-600 font-medium">Users in assigned groups gain access to the wallet</p>
+          {/* Example: Treasury Wallet */}
+          <div className="w-full max-w-2xl bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <p className="text-xs font-semibold text-gray-700 mb-3 text-center">
+              Example: Treasury Wallet (BTC) Group Assignments
+            </p>
+            <div className="space-y-2">
+              {[
+                { group: "Super Admin", caps: ["View Only", "Send Transactions", "Full Manage"], capColors: ["bg-blue-100 text-blue-700", "bg-amber-100 text-amber-700", "bg-rose-100 text-rose-700"] },
+                { group: "Finance", caps: ["View Only", "Send Transactions"], capColors: ["bg-blue-100 text-blue-700", "bg-amber-100 text-amber-700"] },
+                { group: "Compliance", caps: ["View Only"], capColors: ["bg-blue-100 text-blue-700"] },
+              ].map((row) => (
+                <div key={row.group} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2 w-32 flex-shrink-0">
+                    <FolderKey className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-xs font-medium text-gray-700">{row.group}</span>
+                  </div>
+                  <ArrowRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
+                  <div className="flex flex-wrap gap-1">
+                    {row.caps.map((cap, i) => (
+                      <span key={cap} className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${row.capColors[i]}`}>
+                        {cap}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-400 mt-3 text-center">
+              Accounting can <strong>view</strong> the Treasury Wallet &mdash; Finance can <strong>view and send</strong> &mdash; Super Admin has <strong>full control</strong>
+            </p>
+          </div>
+
+          <ArrowDown className="w-3 h-3 text-gray-400" />
+
+          <div className="w-full max-w-2xl bg-gray-50 border border-gray-200 rounded-xl p-3 text-center">
+            <p className="text-xs text-gray-600 font-medium">Users inherit wallet capabilities from their group membership</p>
             <p className="text-[10px] text-gray-400 mt-1">
-              Access is the intersection of: user&apos;s group membership + wallet&apos;s assigned groups + user&apos;s entity assignment
+              A user&apos;s effective wallet access = their group memberships &times; each group&apos;s per-wallet capability assignments
             </p>
           </div>
         </div>
@@ -725,7 +773,7 @@ export default function ArchitecturePage() {
             { rule: "Users can belong to multiple groups — effective permissions are the union", icon: Users },
             { rule: "Entity data is isolated — users only see their assigned entities", icon: Layers },
             { rule: "Unauthorized API calls return 403 Forbidden", icon: Lock },
-            { rule: "Custody wallets require explicit permission grants", icon: Wallet },
+            { rule: "Custody wallet access is capability-based: View, Send Transactions, or Full Manage per group", icon: Wallet },
             { rule: "All features are gated behind feature flags for phased rollout", icon: Shield },
           ].map((item) => {
             const Icon = item.icon;

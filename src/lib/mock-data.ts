@@ -589,13 +589,27 @@ export const resetRequests: ResetRequest[] = [
 // Custody Wallets
 // ─────────────────────────────────────────────
 
+export type WalletCapability = 'view' | 'send_transactions' | 'manage';
+
+export const walletCapabilities: { id: WalletCapability; label: string; description: string; color: string }[] = [
+  { id: 'view', label: 'View Only', description: 'View wallet balances, transaction history, and addresses', color: 'blue' },
+  { id: 'send_transactions', label: 'Send Transactions', description: 'Create and submit transactions from this wallet', color: 'amber' },
+  { id: 'manage', label: 'Full Manage', description: 'Full control including settings, group assignment, and freezing', color: 'rose' },
+];
+
+export interface WalletGroupAssignment {
+  group_id: string;
+  capabilities: WalletCapability[];
+}
+
 export interface CustodyWallet {
   id: string;
   currency: string;
   currency_name: string;
+  label: string;
   address: string;
   organization_id: string;
-  assigned_group_ids: string[];
+  group_assignments: WalletGroupAssignment[];
   status: 'active' | 'frozen';
   created_by: string;
   created_at: string;
@@ -606,9 +620,14 @@ export const custodyWallets: CustodyWallet[] = [
     id: 'wallet-btc-01',
     currency: 'BTC',
     currency_name: 'Bitcoin',
+    label: 'Treasury Wallet',
     address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
     organization_id: 'org-acme',
-    assigned_group_ids: ['grp-acme-super-admin', 'grp-acme-finance'],
+    group_assignments: [
+      { group_id: 'grp-acme-super-admin', capabilities: ['view', 'send_transactions', 'manage'] },
+      { group_id: 'grp-acme-finance', capabilities: ['view', 'send_transactions'] },
+      { group_id: 'grp-acme-compliance', capabilities: ['view'] },
+    ],
     status: 'active',
     created_by: 'usr-alice',
     created_at: '2024-04-01T09:00:00Z',
@@ -617,9 +636,13 @@ export const custodyWallets: CustodyWallet[] = [
     id: 'wallet-eth-01',
     currency: 'ETH',
     currency_name: 'Ethereum',
+    label: 'Operations Wallet',
     address: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD28',
     organization_id: 'org-acme',
-    assigned_group_ids: ['grp-acme-super-admin'],
+    group_assignments: [
+      { group_id: 'grp-acme-super-admin', capabilities: ['view', 'send_transactions', 'manage'] },
+      { group_id: 'grp-acme-operations', capabilities: ['view', 'send_transactions'] },
+    ],
     status: 'active',
     created_by: 'usr-alice',
     created_at: '2024-04-02T10:00:00Z',
@@ -628,9 +651,14 @@ export const custodyWallets: CustodyWallet[] = [
     id: 'wallet-usdc-01',
     currency: 'USDC',
     currency_name: 'USD Coin',
+    label: 'Payments Wallet',
     address: '0x8B3f5393bA08c24cc7ff5A66a832562aAB7bC95f',
     organization_id: 'org-acme',
-    assigned_group_ids: ['grp-acme-super-admin', 'grp-acme-finance', 'grp-acme-operations'],
+    group_assignments: [
+      { group_id: 'grp-acme-super-admin', capabilities: ['view', 'send_transactions', 'manage'] },
+      { group_id: 'grp-acme-finance', capabilities: ['view', 'send_transactions'] },
+      { group_id: 'grp-acme-operations', capabilities: ['view'] },
+    ],
     status: 'active',
     created_by: 'usr-alice',
     created_at: '2024-04-03T11:00:00Z',
@@ -639,9 +667,10 @@ export const custodyWallets: CustodyWallet[] = [
     id: 'wallet-btc-02',
     currency: 'BTC',
     currency_name: 'Bitcoin',
+    label: 'Cold Storage',
     address: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
     organization_id: 'org-acme',
-    assigned_group_ids: [],
+    group_assignments: [],
     status: 'frozen',
     created_by: 'usr-alice',
     created_at: '2024-04-05T14:00:00Z',
