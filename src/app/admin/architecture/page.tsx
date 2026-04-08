@@ -646,6 +646,149 @@ export default function ArchitecturePage() {
             { name: "Dave Kim", role: "Compliance (inactive)", entities: ["Acme US"] },
           ]}
         />
+
+        {/* Wallet access per entity — shows Finance vs Compliance differences */}
+        <div className="mt-4 bg-white border-2 border-blue-200 rounded-2xl overflow-hidden">
+          <div className="bg-blue-600 px-5 py-3">
+            <div className="flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-white/80" />
+              <span className="text-white font-bold text-sm">Acme Corp &mdash; Wallet Access by Entity</span>
+            </div>
+            <p className="text-blue-200 text-[10px] mt-1">
+              Different groups have access to different wallets across entities. Finance and Compliance each see wallets the other cannot.
+            </p>
+          </div>
+          <div className="p-5 space-y-5">
+            {/* Acme US */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Layers className="w-4 h-4 text-indigo-500" />
+                <span className="text-xs font-bold text-indigo-700">Acme US</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 px-3 text-gray-500 font-semibold">Wallet</th>
+                      <th className="text-center py-2 px-3"><span className="text-amber-700 font-semibold">Super Admin</span></th>
+                      <th className="text-center py-2 px-3"><span className="text-blue-700 font-semibold">Finance</span></th>
+                      <th className="text-center py-2 px-3"><span className="text-purple-700 font-semibold">Compliance</span></th>
+                      <th className="text-center py-2 px-3"><span className="text-emerald-700 font-semibold">Operations</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-gray-100">
+                      <td className="py-2 px-3 font-medium text-gray-700">US Treasury (BTC)</td>
+                      <td className="py-2 px-3 text-center"><span className="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-[10px] font-medium">Manage</span></td>
+                      <td className="py-2 px-3 text-center"><span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[10px] font-medium">Send</span></td>
+                      <td className="py-2 px-3 text-center"><span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-medium">View</span></td>
+                      <td className="py-2 px-3 text-center"><span className="text-gray-300">&mdash;</span></td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 px-3 font-medium text-gray-700">US Payments (USDC)</td>
+                      <td className="py-2 px-3 text-center"><span className="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-[10px] font-medium">Manage</span></td>
+                      <td className="py-2 px-3 text-center"><span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[10px] font-medium">Send</span></td>
+                      <td className="py-2 px-3 text-center"><span className="text-gray-300">&mdash;</span></td>
+                      <td className="py-2 px-3 text-center"><span className="text-gray-300">&mdash;</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1.5 italic px-3">
+                Finance can <strong>send</strong> from both US wallets. Compliance can <strong>view</strong> the Treasury but has <strong>no access</strong> to Payments.
+              </p>
+            </div>
+
+            {/* Acme EU */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Layers className="w-4 h-4 text-indigo-500" />
+                <span className="text-xs font-bold text-indigo-700">Acme EU</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 px-3 text-gray-500 font-semibold">Wallet</th>
+                      <th className="text-center py-2 px-3"><span className="text-amber-700 font-semibold">Super Admin</span></th>
+                      <th className="text-center py-2 px-3"><span className="text-blue-700 font-semibold">Finance</span></th>
+                      <th className="text-center py-2 px-3"><span className="text-purple-700 font-semibold">Compliance</span></th>
+                      <th className="text-center py-2 px-3"><span className="text-emerald-700 font-semibold">Operations</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-gray-100">
+                      <td className="py-2 px-3 font-medium text-gray-700">EU Operations (ETH)</td>
+                      <td className="py-2 px-3 text-center"><span className="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-[10px] font-medium">Manage</span></td>
+                      <td className="py-2 px-3 text-center"><span className="text-gray-300">&mdash;</span></td>
+                      <td className="py-2 px-3 text-center"><span className="text-gray-300">&mdash;</span></td>
+                      <td className="py-2 px-3 text-center"><span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[10px] font-medium">Send</span></td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 px-3 font-medium text-gray-700">EU Payments (USDC)</td>
+                      <td className="py-2 px-3 text-center"><span className="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-[10px] font-medium">Manage</span></td>
+                      <td className="py-2 px-3 text-center"><span className="text-gray-300">&mdash;</span></td>
+                      <td className="py-2 px-3 text-center"><span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-medium">View</span></td>
+                      <td className="py-2 px-3 text-center"><span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-medium">View</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1.5 italic px-3">
+                Finance has <strong>no access</strong> to any EU wallets. Compliance can <strong>view</strong> EU Payments but not EU Operations. Operations can <strong>send</strong> from EU Operations.
+              </p>
+            </div>
+
+            {/* Acme APAC */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Layers className="w-4 h-4 text-indigo-500" />
+                <span className="text-xs font-bold text-indigo-700">Acme APAC</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 px-3 text-gray-500 font-semibold">Wallet</th>
+                      <th className="text-center py-2 px-3" colSpan={4}><span className="text-gray-400 font-medium">All Groups</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="py-2 px-3 font-medium text-gray-700">APAC Cold Storage (BTC)</td>
+                      <td className="py-2 px-3 text-center" colSpan={4}>
+                        <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-medium">Frozen &mdash; no groups assigned</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Summary callout */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs font-semibold text-blue-800 mb-2">Key Takeaway</p>
+              <ul className="space-y-1 text-[10px] text-blue-700">
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1 w-1 h-1 rounded-full bg-blue-500 flex-shrink-0" />
+                  <span><strong>Finance</strong> can send from US Treasury &amp; US Payments, but has <strong>zero access</strong> to any EU wallet</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1 w-1 h-1 rounded-full bg-blue-500 flex-shrink-0" />
+                  <span><strong>Compliance</strong> can view US Treasury &amp; EU Payments, but has <strong>zero access</strong> to US Payments or EU Operations</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1 w-1 h-1 rounded-full bg-blue-500 flex-shrink-0" />
+                  <span><strong>Operations</strong> can send from EU Operations &amp; view EU Payments, but has <strong>zero access</strong> to any US wallet</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1 w-1 h-1 rounded-full bg-blue-500 flex-shrink-0" />
+                  <span>Each group sees a <strong>different set of wallets</strong> &mdash; access is not uniform across the organization</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Concrete examples: Manager org */}
