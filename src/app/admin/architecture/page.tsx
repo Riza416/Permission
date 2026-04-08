@@ -674,15 +674,28 @@ export default function ArchitecturePage() {
           Custody Wallets &mdash; Capability-Based Access
         </h2>
         <div className="flex flex-col items-center space-y-3">
+          {/* Entity → Wallet relationship */}
+          <div className="w-full max-w-2xl bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Layers className="w-5 h-5 text-indigo-500" />
+              <span className="text-sm font-bold text-indigo-800">Entity / Space</span>
+              <span className="text-[10px] bg-indigo-200 text-indigo-700 px-1.5 py-0.5 rounded-full font-medium">e.g. Acme US, Acme EU</span>
+            </div>
+            <p className="text-[10px] text-indigo-600">Wallets belong to a specific entity within an organization</p>
+            <p className="text-[10px] text-indigo-500 mt-1">Different entities can have different wallets with different group access</p>
+          </div>
+
+          <VerticalConnector label="contains" dashed />
+
           {/* Wallet */}
           <div className="w-full max-w-2xl bg-rose-50 border-2 border-rose-200 rounded-xl p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Wallet className="w-5 h-5 text-rose-500" />
               <span className="text-sm font-bold text-rose-800">Custody Wallet</span>
-              <span className="text-[10px] bg-rose-200 text-rose-700 px-1.5 py-0.5 rounded-full font-medium">e.g. Treasury Wallet (BTC)</span>
+              <span className="text-[10px] bg-rose-200 text-rose-700 px-1.5 py-0.5 rounded-full font-medium">e.g. US Treasury Wallet (BTC)</span>
             </div>
             <p className="text-[10px] text-rose-600">Created by users with <code className="bg-rose-100 px-1 rounded">custody.wallet.create</code></p>
-            <p className="text-[10px] text-rose-500 mt-1">Labelled, scoped by currency, and belongs to an organization</p>
+            <p className="text-[10px] text-rose-500 mt-1">Labelled, scoped by currency, and scoped to an entity</p>
           </div>
 
           <div className="flex flex-col items-center">
@@ -718,43 +731,74 @@ export default function ArchitecturePage() {
           <ArrowDown className="w-3 h-3 text-gray-400" />
 
           {/* Example: Treasury Wallet */}
-          <div className="w-full max-w-2xl bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <p className="text-xs font-semibold text-gray-700 mb-3 text-center">
-              Example: Treasury Wallet (BTC) Group Assignments
-            </p>
-            <div className="space-y-2">
-              {[
-                { group: "Super Admin", caps: ["View Only", "Send Transactions", "Full Manage"], capColors: ["bg-blue-100 text-blue-700", "bg-amber-100 text-amber-700", "bg-rose-100 text-rose-700"] },
-                { group: "Finance", caps: ["View Only", "Send Transactions"], capColors: ["bg-blue-100 text-blue-700", "bg-amber-100 text-amber-700"] },
-                { group: "Compliance", caps: ["View Only"], capColors: ["bg-blue-100 text-blue-700"] },
-              ].map((row) => (
-                <div key={row.group} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
-                  <div className="flex items-center gap-2 w-32 flex-shrink-0">
-                    <FolderKey className="w-3.5 h-3.5 text-gray-400" />
-                    <span className="text-xs font-medium text-gray-700">{row.group}</span>
+          {/* Example: two entities, different access */}
+          <div className="w-full max-w-2xl space-y-4">
+            {/* Acme US */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Layers className="w-4 h-4 text-indigo-500" />
+                <p className="text-xs font-semibold text-indigo-700">Acme US</p>
+                <span className="text-[10px] text-gray-400">&mdash; US Treasury Wallet (BTC)</span>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { group: "Super Admin", caps: ["View Only", "Send Transactions", "Full Manage"], capColors: ["bg-blue-100 text-blue-700", "bg-amber-100 text-amber-700", "bg-rose-100 text-rose-700"] },
+                  { group: "Finance", caps: ["View Only", "Send Transactions"], capColors: ["bg-blue-100 text-blue-700", "bg-amber-100 text-amber-700"] },
+                  { group: "Compliance", caps: ["View Only"], capColors: ["bg-blue-100 text-blue-700"] },
+                ].map((row) => (
+                  <div key={row.group} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2 w-32 flex-shrink-0">
+                      <FolderKey className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-xs font-medium text-gray-700">{row.group}</span>
+                    </div>
+                    <ArrowRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
+                    <div className="flex flex-wrap gap-1">
+                      {row.caps.map((cap, i) => (
+                        <span key={cap} className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${row.capColors[i]}`}>{cap}</span>
+                      ))}
+                    </div>
                   </div>
-                  <ArrowRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
-                  <div className="flex flex-wrap gap-1">
-                    {row.caps.map((cap, i) => (
-                      <span key={cap} className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${row.capColors[i]}`}>
-                        {cap}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-3 text-center">
-              Accounting can <strong>view</strong> the Treasury Wallet &mdash; Finance can <strong>view and send</strong> &mdash; Super Admin has <strong>full control</strong>
-            </p>
+            {/* Acme EU - different groups, different capabilities */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Layers className="w-4 h-4 text-indigo-500" />
+                <p className="text-xs font-semibold text-indigo-700">Acme EU</p>
+                <span className="text-[10px] text-gray-400">&mdash; EU Operations Wallet (ETH)</span>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { group: "Super Admin", caps: ["View Only", "Send Transactions", "Full Manage"], capColors: ["bg-blue-100 text-blue-700", "bg-amber-100 text-amber-700", "bg-rose-100 text-rose-700"] },
+                  { group: "Operations", caps: ["View Only", "Send Transactions"], capColors: ["bg-blue-100 text-blue-700", "bg-amber-100 text-amber-700"] },
+                ].map((row) => (
+                  <div key={row.group} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2 w-32 flex-shrink-0">
+                      <FolderKey className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-xs font-medium text-gray-700">{row.group}</span>
+                    </div>
+                    <ArrowRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
+                    <div className="flex flex-wrap gap-1">
+                      {row.caps.map((cap, i) => (
+                        <span key={cap} className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${row.capColors[i]}`}>{cap}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-gray-400 mt-2 italic">
+                Note: Finance has no access to the EU wallet &mdash; only Operations does. Different entities, different group assignments.
+              </p>
+            </div>
           </div>
 
           <ArrowDown className="w-3 h-3 text-gray-400" />
 
           <div className="w-full max-w-2xl bg-gray-50 border border-gray-200 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-600 font-medium">Users inherit wallet capabilities from their group membership</p>
+            <p className="text-xs text-gray-600 font-medium">Users inherit wallet capabilities from their group membership within each entity</p>
             <p className="text-[10px] text-gray-400 mt-1">
-              A user&apos;s effective wallet access = their group memberships &times; each group&apos;s per-wallet capability assignments
+              A user&apos;s effective wallet access = their entity assignment + group membership + each group&apos;s per-wallet capability level
             </p>
           </div>
         </div>
@@ -773,7 +817,7 @@ export default function ArchitecturePage() {
             { rule: "Users can belong to multiple groups — effective permissions are the union", icon: Users },
             { rule: "Entity data is isolated — users only see their assigned entities", icon: Layers },
             { rule: "Unauthorized API calls return 403 Forbidden", icon: Lock },
-            { rule: "Custody wallet access is capability-based: View, Send Transactions, or Full Manage per group", icon: Wallet },
+            { rule: "Custody wallets are entity-scoped with per-group capabilities: View, Send, or Manage", icon: Wallet },
             { rule: "All features are gated behind feature flags for phased rollout", icon: Shield },
           ].map((item) => {
             const Icon = item.icon;

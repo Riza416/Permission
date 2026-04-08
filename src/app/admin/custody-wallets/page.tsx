@@ -16,6 +16,7 @@ import {
   Eye,
   Send,
   Settings,
+  Layers,
 } from "lucide-react";
 import {
   custodyWallets,
@@ -25,6 +26,7 @@ import {
   walletCapabilities,
   permissionGroups,
   organizations,
+  entities,
   users,
 } from "@/lib/mock-data";
 import { useRole } from "@/components/Sidebar";
@@ -309,6 +311,7 @@ function WalletCard({
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
 
   const org = organizations.find((o) => o.id === wallet.organization_id);
+  const entity = entities.find((e) => e.id === wallet.entity_id);
   const createdBy = users.find((u) => u.id === wallet.created_by);
 
   return (
@@ -348,6 +351,8 @@ function WalletCard({
           <div className="mt-2 flex items-center gap-3 text-xs text-gray-500 flex-wrap">
             <span>{org?.name}</span>
             <span className="w-1 h-1 rounded-full bg-gray-300" />
+            <span className="font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{entity?.name ?? "Unassigned"}</span>
+            <span className="w-1 h-1 rounded-full bg-gray-300" />
             <span>
               {wallet.group_assignments.length} group{wallet.group_assignments.length !== 1 ? "s" : ""} assigned
             </span>
@@ -382,10 +387,14 @@ function WalletCard({
       {expanded && (
         <div className="border-t border-gray-100 bg-gray-50 rounded-b-xl p-5 space-y-5">
           {/* Wallet details */}
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
             <div>
               <span className="text-xs text-gray-500 font-medium">Wallet ID</span>
               <p className="font-mono text-gray-700 text-xs mt-0.5">{wallet.id}</p>
+            </div>
+            <div>
+              <span className="text-xs text-gray-500 font-medium">Entity</span>
+              <p className="text-gray-700 text-xs mt-0.5 font-medium">{entity?.name ?? "—"}</p>
             </div>
             <div>
               <span className="text-xs text-gray-500 font-medium">Label</span>
@@ -562,14 +571,18 @@ function CreateWalletModal({
   onCreate,
 }: {
   onClose: () => void;
-  onCreate: (currency: string, label: string) => void;
+  onCreate: (currency: string, label: string, entityId: string) => void;
 }) {
   const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
+  const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
   const [label, setLabel] = useState("");
+
+  // Only show entities for the default org (Acme Corp) in this mock
+  const orgEntities = entities.filter((e) => e.organization_id === "org-acme");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">Create Custody Wallet</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -587,6 +600,29 @@ function CreateWalletModal({
               placeholder="e.g. Treasury Wallet, Payments Wallet"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Assign to Entity</label>
+            <div className="space-y-2">
+              {orgEntities.map((ent) => (
+                <button
+                  key={ent.id}
+                  onClick={() => setSelectedEntity(ent.id)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
+                    selectedEntity === ent.id
+                      ? "border-indigo-500 bg-indigo-50 shadow-sm"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <Layers className={`w-4 h-4 flex-shrink-0 ${selectedEntity === ent.id ? "text-indigo-500" : "text-gray-400"}`} />
+                  <span className="text-sm text-gray-700 font-medium">{ent.name}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">
+              The wallet will be scoped to this entity. Different entities can have different wallets with different group access.
+            </p>
           </div>
 
           <div>
@@ -621,9 +657,9 @@ function CreateWalletModal({
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">Cancel</button>
           <button
             onClick={() => {
-              if (selectedCurrency && label.trim()) onCreate(selectedCurrency, label.trim());
+              if (selectedCurrency && label.trim() && selectedEntity) onCreate(selectedCurrency, label.trim(), selectedEntity);
             }}
-            disabled={!selectedCurrency || !label.trim()}
+            disabled={!selectedCurrency || !label.trim() || !selectedEntity}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Create Wallet
@@ -647,11 +683,18 @@ export default function CustodyWalletsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [assignModalWallet, setAssignModalWallet] = useState<CustodyWallet | null>(null);
   const [filterCurrency, setFilterCurrency] = useState<string>("all");
+  const [filterEntity, setFilterEntity] = useState<string>("all");
 
-  const filteredWallets = filterCurrency === "all" ? wallets : wallets.filter((w) => w.currency === filterCurrency);
+  const orgEntities = entities.filter((e) => e.organization_id === "org-acme");
+
+  const filteredWallets = wallets.filter((w) => {
+    if (filterCurrency !== "all" && w.currency !== filterCurrency) return false;
+    if (filterEntity !== "all" && w.entity_id !== filterEntity) return false;
+    return true;
+  });
   const uniqueCurrenciesInWallets = Array.from(new Set(wallets.map((w) => w.currency)));
 
-  function handleCreate(currency: string, label: string) {
+  function handleCreate(currency: string, label: string, entityId: string) {
     const curr = currencies.find((c) => c.code === currency);
     const newWallet: CustodyWallet = {
       id: `wallet-${currency.toLowerCase()}-${String(wallets.length + 1).padStart(2, "0")}`,
@@ -660,6 +703,7 @@ export default function CustodyWalletsPage() {
       label,
       address: `0x${Math.random().toString(16).slice(2, 42)}`,
       organization_id: "org-acme",
+      entity_id: entityId,
       group_assignments: [],
       status: "active",
       created_by: "usr-alice",
@@ -810,60 +854,119 @@ export default function CustodyWalletsPage() {
         </div>
       </div>
 
-      {/* Filter */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-medium text-gray-700">Filter by currency:</span>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setFilterCurrency("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-              filterCurrency === "all" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            All ({wallets.length})
-          </button>
-          {uniqueCurrenciesInWallets.map((curr) => {
-            const count = wallets.filter((w) => w.currency === curr).length;
-            return (
-              <button
-                key={curr}
-                onClick={() => setFilterCurrency(curr)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                  filterCurrency === curr ? "bg-gray-900 text-white border-gray-900" : `${getCurrencyStyle(curr)} hover:opacity-80`
-                }`}
-              >
-                {curr} ({count})
-              </button>
-            );
-          })}
+      {/* Filters */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+        {/* Entity filter */}
+        <div className="flex items-center gap-3">
+          <Layers className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <span className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">Entity:</span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setFilterEntity("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                filterEntity === "all" ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              All Entities ({wallets.length})
+            </button>
+            {orgEntities.map((ent) => {
+              const count = wallets.filter((w) => w.entity_id === ent.id).length;
+              return (
+                <button
+                  key={ent.id}
+                  onClick={() => setFilterEntity(ent.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    filterEntity === ent.id ? "bg-indigo-600 text-white border-indigo-600" : "bg-indigo-50 text-indigo-700 border-indigo-200 hover:border-indigo-300"
+                  }`}
+                >
+                  {ent.name} ({count})
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {/* Currency filter */}
+        <div className="flex items-center gap-3">
+          <Wallet className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <span className="text-sm font-medium text-gray-700 w-20 flex-shrink-0">Currency:</span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setFilterCurrency("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                filterCurrency === "all" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              All
+            </button>
+            {uniqueCurrenciesInWallets.map((curr) => {
+              const count = wallets.filter((w) => w.currency === curr).length;
+              return (
+                <button
+                  key={curr}
+                  onClick={() => setFilterCurrency(curr)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    filterCurrency === curr ? "bg-gray-900 text-white border-gray-900" : `${getCurrencyStyle(curr)} hover:opacity-80`
+                  }`}
+                >
+                  {curr} ({count})
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Wallet list */}
-      <div className="space-y-3">
-        {filteredWallets.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
-            <Wallet className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">No wallets found</p>
-            {canCreate && (
-              <button onClick={() => setShowCreateModal(true)} className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium">
-                Create your first wallet
-              </button>
-            )}
-          </div>
-        ) : (
-          filteredWallets.map((wallet) => (
-            <WalletCard
-              key={wallet.id}
-              wallet={wallet}
-              canAssignGroups={canAssign}
-              onAssignGroup={(w) => setAssignModalWallet(w)}
-              onUnassignGroup={handleUnassignGroup}
-              onUpdateCapabilities={handleUpdateCapabilities}
-            />
-          ))
-        )}
-      </div>
+      {/* Wallet list - grouped by entity */}
+      {filteredWallets.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
+          <Wallet className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">No wallets found</p>
+          {canCreate && (
+            <button onClick={() => setShowCreateModal(true)} className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium">
+              Create your first wallet
+            </button>
+          )}
+        </div>
+      ) : (
+        (() => {
+          // Group wallets by entity
+          const entityIds = Array.from(new Set(filteredWallets.map((w) => w.entity_id)));
+          const groupedByEntity = entityIds.map((eid) => ({
+            entity: entities.find((e) => e.id === eid),
+            wallets: filteredWallets.filter((w) => w.entity_id === eid),
+          }));
+
+          return (
+            <div className="space-y-6">
+              {groupedByEntity.map(({ entity: ent, wallets: entWallets }) => (
+                <div key={ent?.id ?? "unknown"}>
+                  {/* Entity header */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <Layers className="w-4 h-4 text-indigo-500" />
+                    <h3 className="text-sm font-semibold text-gray-800">{ent?.name ?? "Unknown Entity"}</h3>
+                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                      {entWallets.length} wallet{entWallets.length !== 1 ? "s" : ""}
+                    </span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                  </div>
+                  <div className="space-y-3">
+                    {entWallets.map((wallet) => (
+                      <WalletCard
+                        key={wallet.id}
+                        wallet={wallet}
+                        canAssignGroups={canAssign}
+                        onAssignGroup={(w) => setAssignModalWallet(w)}
+                        onUnassignGroup={handleUnassignGroup}
+                        onUpdateCapabilities={handleUpdateCapabilities}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()
+      )}
 
       {/* Audit note */}
       <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex items-start gap-2 text-xs text-gray-500">

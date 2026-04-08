@@ -609,6 +609,7 @@ export interface CustodyWallet {
   label: string;
   address: string;
   organization_id: string;
+  entity_id: string;
   group_assignments: WalletGroupAssignment[];
   status: 'active' | 'frozen';
   created_by: string;
@@ -616,13 +617,15 @@ export interface CustodyWallet {
 }
 
 export const custodyWallets: CustodyWallet[] = [
+  // ── Acme US wallets ──
   {
-    id: 'wallet-btc-01',
+    id: 'wallet-btc-us-01',
     currency: 'BTC',
     currency_name: 'Bitcoin',
-    label: 'Treasury Wallet',
+    label: 'US Treasury Wallet',
     address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
     organization_id: 'org-acme',
+    entity_id: 'ent-acme-us',
     group_assignments: [
       { group_id: 'grp-acme-super-admin', capabilities: ['view', 'send_transactions', 'manage'] },
       { group_id: 'grp-acme-finance', capabilities: ['view', 'send_transactions'] },
@@ -633,43 +636,64 @@ export const custodyWallets: CustodyWallet[] = [
     created_at: '2024-04-01T09:00:00Z',
   },
   {
-    id: 'wallet-eth-01',
+    id: 'wallet-usdc-us-01',
+    currency: 'USDC',
+    currency_name: 'USD Coin',
+    label: 'US Payments Wallet',
+    address: '0x8B3f5393bA08c24cc7ff5A66a832562aAB7bC95f',
+    organization_id: 'org-acme',
+    entity_id: 'ent-acme-us',
+    group_assignments: [
+      { group_id: 'grp-acme-super-admin', capabilities: ['view', 'send_transactions', 'manage'] },
+      { group_id: 'grp-acme-finance', capabilities: ['view', 'send_transactions'] },
+    ],
+    status: 'active',
+    created_by: 'usr-alice',
+    created_at: '2024-04-02T10:00:00Z',
+  },
+  // ── Acme EU wallets ──
+  {
+    id: 'wallet-eth-eu-01',
     currency: 'ETH',
     currency_name: 'Ethereum',
-    label: 'Operations Wallet',
+    label: 'EU Operations Wallet',
     address: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD28',
     organization_id: 'org-acme',
+    entity_id: 'ent-acme-eu',
     group_assignments: [
       { group_id: 'grp-acme-super-admin', capabilities: ['view', 'send_transactions', 'manage'] },
       { group_id: 'grp-acme-operations', capabilities: ['view', 'send_transactions'] },
     ],
     status: 'active',
     created_by: 'usr-alice',
-    created_at: '2024-04-02T10:00:00Z',
-  },
-  {
-    id: 'wallet-usdc-01',
-    currency: 'USDC',
-    currency_name: 'USD Coin',
-    label: 'Payments Wallet',
-    address: '0x8B3f5393bA08c24cc7ff5A66a832562aAB7bC95f',
-    organization_id: 'org-acme',
-    group_assignments: [
-      { group_id: 'grp-acme-super-admin', capabilities: ['view', 'send_transactions', 'manage'] },
-      { group_id: 'grp-acme-finance', capabilities: ['view', 'send_transactions'] },
-      { group_id: 'grp-acme-operations', capabilities: ['view'] },
-    ],
-    status: 'active',
-    created_by: 'usr-alice',
     created_at: '2024-04-03T11:00:00Z',
   },
   {
-    id: 'wallet-btc-02',
+    id: 'wallet-usdc-eu-01',
+    currency: 'USDC',
+    currency_name: 'USD Coin',
+    label: 'EU Payments Wallet',
+    address: '0x1A2b3C4d5E6f7890aBcDeF1234567890AbCdEf12',
+    organization_id: 'org-acme',
+    entity_id: 'ent-acme-eu',
+    group_assignments: [
+      { group_id: 'grp-acme-super-admin', capabilities: ['view', 'send_transactions', 'manage'] },
+      { group_id: 'grp-acme-operations', capabilities: ['view'] },
+      { group_id: 'grp-acme-compliance', capabilities: ['view'] },
+    ],
+    status: 'active',
+    created_by: 'usr-alice',
+    created_at: '2024-04-04T09:00:00Z',
+  },
+  // ── Acme APAC wallets ──
+  {
+    id: 'wallet-btc-apac-01',
     currency: 'BTC',
     currency_name: 'Bitcoin',
-    label: 'Cold Storage',
+    label: 'APAC Cold Storage',
     address: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
     organization_id: 'org-acme',
+    entity_id: 'ent-acme-apac',
     group_assignments: [],
     status: 'frozen',
     created_by: 'usr-alice',
