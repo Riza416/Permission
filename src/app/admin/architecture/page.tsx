@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Lock,
   Wallet,
+  Briefcase,
   ChevronDown,
   ChevronUp,
   Eye,
@@ -455,6 +456,16 @@ export default function ArchitecturePage() {
                 {
                   name: "Acme US",
                   admins: ["Bob", "Carol"],
+                  accounts: [
+                    {
+                      name: "US Treasury",
+                      wallets: ["US Treasury (BTC)", "US Payments (USDC)"],
+                    },
+                    {
+                      name: "US Operations",
+                      wallets: ["US Ops (ETH)"],
+                    },
+                  ],
                   groups: [
                     { name: "Finance", color: "bg-blue-50 border-blue-200" },
                     { name: "Compliance", color: "bg-purple-50 border-purple-200" },
@@ -464,6 +475,12 @@ export default function ArchitecturePage() {
                 {
                   name: "Acme EU",
                   admins: ["Carol", "Fiona"],
+                  accounts: [
+                    {
+                      name: "EU Main",
+                      wallets: ["EU Ops (ETH)", "EU Payments (USDC)"],
+                    },
+                  ],
                   groups: [
                     { name: "Operations", color: "bg-emerald-50 border-emerald-200" },
                     { name: "Compliance", color: "bg-purple-50 border-purple-200" },
@@ -472,6 +489,12 @@ export default function ArchitecturePage() {
                 {
                   name: "Acme APAC",
                   admins: ["Fiona"],
+                  accounts: [
+                    {
+                      name: "APAC Cold Storage",
+                      wallets: ["APAC Cold Storage (BTC)"],
+                    },
+                  ],
                   groups: [
                     { name: "Operations", color: "bg-emerald-50 border-emerald-200" },
                   ],
@@ -490,15 +513,40 @@ export default function ArchitecturePage() {
                       ))}
                     </div>
                   </div>
-                  <div className="px-4 py-2.5 bg-white">
-                    <p className="text-[10px] text-gray-400 mb-2">Groups in this entity:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {ent.groups.map((g) => (
-                        <div key={g.name} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium text-gray-700 ${g.color}`}>
-                          <FolderKey className="w-3 h-3 text-gray-400" />
-                          {g.name}
-                        </div>
-                      ))}
+                  <div className="px-4 py-2.5 bg-white space-y-2.5">
+                    {/* Accounts within this entity */}
+                    <div>
+                      <p className="text-[10px] text-gray-400 mb-1.5 font-medium">Accounts (wallet containers):</p>
+                      <div className="space-y-1.5">
+                        {ent.accounts.map((acc) => (
+                          <div key={acc.name} className="border border-amber-200 bg-amber-50 rounded-lg px-2.5 py-1.5">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <Briefcase className="w-3 h-3 text-amber-500" />
+                              <span className="text-[10px] font-semibold text-amber-700">{acc.name}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1 pl-4">
+                              {acc.wallets.map((w) => (
+                                <span key={w} className="flex items-center gap-1 text-[9px] bg-white border border-rose-200 text-rose-600 px-1.5 py-0.5 rounded font-medium">
+                                  <Wallet className="w-2.5 h-2.5" />
+                                  {w}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Groups */}
+                    <div>
+                      <p className="text-[10px] text-gray-400 mb-1.5 font-medium">Groups assigned to wallets:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {ent.groups.map((g) => (
+                          <div key={g.name} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium text-gray-700 ${g.color}`}>
+                            <FolderKey className="w-3 h-3 text-gray-400" />
+                            {g.name}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -603,12 +651,20 @@ export default function ArchitecturePage() {
                 <span className="text-rose-500 text-[10px] ml-auto">each wallet is assigned to specific groups</span>
               </div>
               <div className="bg-white p-4 space-y-3">
+                {/* Account level note */}
+                <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  <Briefcase className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-amber-700">
+                    <strong>Wallets live inside accounts.</strong> An account groups related wallets within an entity. Clients can add multiple wallets to an account.
+                  </p>
+                </div>
                 {/* Example wallets with their group assignments */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
                     {
                       name: "US Treasury (BTC)",
                       entity: "Acme US",
+                      account: "US Treasury",
                       groups: [
                         { name: "Finance", cap: "Send", capColor: "bg-amber-100 text-amber-700" },
                         { name: "Compliance", cap: "View", capColor: "bg-blue-100 text-blue-700" },
@@ -618,6 +674,7 @@ export default function ArchitecturePage() {
                     {
                       name: "EU Ops (ETH)",
                       entity: "Acme EU",
+                      account: "EU Main",
                       groups: [
                         { name: "Operations", cap: "Send", capColor: "bg-amber-100 text-amber-700" },
                       ],
@@ -626,6 +683,7 @@ export default function ArchitecturePage() {
                     {
                       name: "US Payments (USDC)",
                       entity: "Acme US",
+                      account: "US Treasury",
                       groups: [
                         { name: "Finance", cap: "Send", capColor: "bg-amber-100 text-amber-700" },
                         { name: "Treasury Ops", cap: "Manage", capColor: "bg-rose-100 text-rose-700" },
@@ -635,6 +693,7 @@ export default function ArchitecturePage() {
                     {
                       name: "EU Payments (USDC)",
                       entity: "Acme EU",
+                      account: "EU Main",
                       groups: [
                         { name: "Compliance", cap: "View", capColor: "bg-blue-100 text-blue-700" },
                         { name: "Operations", cap: "View", capColor: "bg-blue-100 text-blue-700" },
@@ -647,7 +706,11 @@ export default function ArchitecturePage() {
                         <Wallet className="w-3.5 h-3.5 text-rose-400" />
                         <span className="text-xs font-semibold text-gray-800">{w.name}</span>
                       </div>
-                      <p className="text-[10px] text-indigo-500 font-medium mb-2">{w.entity}</p>
+                      <p className="text-[10px] text-indigo-500 font-medium mb-1">{w.entity}</p>
+                      <div className="flex items-center gap-1 mb-2">
+                        <Briefcase className="w-2.5 h-2.5 text-amber-400" />
+                        <span className="text-[9px] text-amber-600 font-medium">Account: {w.account}</span>
+                      </div>
                       <div className="space-y-1">
                         {w.groups.map((g) => (
                           <div key={g.name} className="flex items-center gap-2">
@@ -774,15 +837,19 @@ export default function ArchitecturePage() {
                   <span><strong className="text-white">Each entity admin</strong> creates <strong className="text-emerald-300">groups within their entity only</strong> and assigns permissions from the registry. Groups are <strong className="text-indigo-300">not shared</strong> across entities.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                  <span><strong className="text-white">Wallets</strong> are created within entities and <strong className="text-rose-300">individually assigned to specific groups in that entity</strong> with a capability level (View, Send, or Manage)</span>
+                  <span className="bg-amber-400 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                  <span><strong className="text-white">Accounts</strong> are created within an entity to <strong className="text-amber-300">group related wallets together</strong>. An entity can have multiple accounts (e.g. &ldquo;US Treasury&rdquo;, &ldquo;US Operations&rdquo;), each containing one or more wallets.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+                  <span><strong className="text-white">Wallets</strong> live inside accounts and are <strong className="text-rose-300">individually assigned to specific groups</strong> with a capability level (View, Send, or Manage)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">!</span>
                   <span><strong className="text-rose-300">Not every group gets every wallet.</strong> A group with &quot;Send Transactions&quot; can only send from wallets it is explicitly assigned to &mdash; not all wallets in the entity</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="bg-gray-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+                  <span className="bg-gray-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">5</span>
                   <span><strong className="text-white">Users</strong> belong to an entity, inherit their group&apos;s permissions, and only get wallet access that their group has been granted on each specific wallet</span>
                 </li>
               </ol>
@@ -1199,15 +1266,28 @@ export default function ArchitecturePage() {
           Custody Wallets &mdash; Capability-Based Access
         </h2>
         <div className="flex flex-col items-center space-y-3">
-          {/* Entity → Wallet relationship */}
+          {/* Entity → Account → Wallet relationship */}
           <div className="w-full max-w-2xl bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Layers className="w-5 h-5 text-indigo-500" />
               <span className="text-sm font-bold text-indigo-800">Entity / Space</span>
               <span className="text-[10px] bg-indigo-200 text-indigo-700 px-1.5 py-0.5 rounded-full font-medium">e.g. Acme US, Acme EU</span>
             </div>
-            <p className="text-[10px] text-indigo-600">Wallets belong to a specific entity within an organization</p>
-            <p className="text-[10px] text-indigo-500 mt-1">Different entities can have different wallets with different group access</p>
+            <p className="text-[10px] text-indigo-600">The top-level operational boundary within an organization</p>
+            <p className="text-[10px] text-indigo-500 mt-1">Data isolation enforced per entity — users only see their assigned entities</p>
+          </div>
+
+          <VerticalConnector label="contains" dashed />
+
+          {/* Account */}
+          <div className="w-full max-w-2xl bg-amber-50 border-2 border-amber-200 rounded-xl p-4 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Briefcase className="w-5 h-5 text-amber-500" />
+              <span className="text-sm font-bold text-amber-800">Account</span>
+              <span className="text-[10px] bg-amber-200 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">e.g. US Treasury, EU Main</span>
+            </div>
+            <p className="text-[10px] text-amber-700">A container that groups multiple wallets together within an entity</p>
+            <p className="text-[10px] text-amber-600 mt-1">Clients can create multiple accounts per entity and add multiple wallets to each account</p>
           </div>
 
           <VerticalConnector label="contains" dashed />

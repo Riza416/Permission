@@ -17,6 +17,7 @@ import {
   Send,
   Settings,
   Layers,
+  Briefcase,
 } from "lucide-react";
 import {
   custodyWallets,
@@ -28,6 +29,8 @@ import {
   organizations,
   entities,
   users,
+  accounts,
+  Account,
 } from "@/lib/mock-data";
 import { useRole } from "@/components/Sidebar";
 
@@ -93,14 +96,12 @@ function hasPermission(role: string, permName: string): boolean {
 
 function StatsCards({ wallets }: { wallets: CustodyWallet[] }) {
   const active = wallets.filter((w) => w.status === "active").length;
-  const frozen = wallets.filter((w) => w.status === "frozen").length;
-  const uniqueCurrencies = new Set(wallets.map((w) => w.currency)).size;
   const totalAssignments = wallets.reduce((sum, w) => sum + w.group_assignments.length, 0);
 
   const stats = [
     { label: "Total Wallets", value: wallets.length, icon: Wallet, bg: "bg-blue-50 border-blue-200", text: "text-blue-600" },
     { label: "Active", value: active, icon: CheckCircle2, bg: "bg-emerald-50 border-emerald-200", text: "text-emerald-600" },
-    { label: "Frozen", value: frozen, icon: Snowflake, bg: "bg-red-50 border-red-200", text: "text-red-600" },
+    { label: "Accounts", value: accounts.length, icon: Briefcase, bg: "bg-violet-50 border-violet-200", text: "text-violet-600" },
     { label: "Group Assignments", value: totalAssignments, icon: Users, bg: "bg-amber-50 border-amber-200", text: "text-amber-600" },
   ];
 
@@ -312,6 +313,7 @@ function WalletCard({
 
   const org = organizations.find((o) => o.id === wallet.organization_id);
   const entity = entities.find((e) => e.id === wallet.entity_id);
+  const account = accounts.find((a) => a.id === wallet.account_id);
   const createdBy = users.find((u) => u.id === wallet.created_by);
 
   return (
@@ -352,6 +354,11 @@ function WalletCard({
             <span>{org?.name}</span>
             <span className="w-1 h-1 rounded-full bg-gray-300" />
             <span className="font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{entity?.name ?? "Unassigned"}</span>
+            <span className="w-1 h-1 rounded-full bg-gray-300" />
+            <span className="inline-flex items-center gap-1 font-medium text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded">
+              <Briefcase className="w-3 h-3" />
+              {account?.name ?? "No Account"}
+            </span>
             <span className="w-1 h-1 rounded-full bg-gray-300" />
             <span>
               {wallet.group_assignments.length} group{wallet.group_assignments.length !== 1 ? "s" : ""} assigned
@@ -571,14 +578,16 @@ function CreateWalletModal({
   onCreate,
 }: {
   onClose: () => void;
-  onCreate: (currency: string, label: string, entityId: string, initialAssignments: WalletGroupAssignment[]) => void;
+  onCreate: (currency: string, label: string, entityId: string, accountId: string, initialAssignments: WalletGroupAssignment[]) => void;
 }) {
   const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const [label, setLabel] = useState("");
   const [groupAssignments, setGroupAssignments] = useState<Record<string, WalletCapability[]>>({});
 
   const orgEntities = entities.filter((e) => e.organization_id === "org-acme");
+  const entityAccounts = selectedEntity ? accounts.filter((a) => a.entity_id === selectedEntity) : [];
   const orgGroups = permissionGroups.filter((g) => g.organization_id === "org-acme");
 
   function toggleGroup(groupId: string) {
@@ -639,7 +648,7 @@ function CreateWalletModal({
               {orgEntities.map((ent) => (
                 <button
                   key={ent.id}
-                  onClick={() => setSelectedEntity(ent.id)}
+                  onClick={() => { setSelectedEntity(ent.id); setSelectedAccount(null); }}
                   className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
                     selectedEntity === ent.id
                       ? "border-indigo-500 bg-indigo-50 shadow-sm"
@@ -653,10 +662,48 @@ function CreateWalletModal({
             </div>
           </div>
 
-          {/* Step 3: Currency */}
+          {/* Step 3: Account */}
+          {selectedEntity && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1.5">3</span>
+                Select Account
+              </label>
+              {entityAccounts.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">No accounts in this entity yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {entityAccounts.map((acc) => (
+                    <button
+                      key={acc.id}
+                      onClick={() => setSelectedAccount(acc.id)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
+                        selectedAccount === acc.id
+                          ? "border-amber-500 bg-amber-50 shadow-sm"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <Briefcase className={`w-4 h-4 flex-shrink-0 ${selectedAccount === acc.id ? "text-amber-500" : "text-gray-400"}`} />
+                      <div>
+                        <span className="text-sm text-gray-700 font-medium">{acc.name}</span>
+                        <p className="text-[10px] text-gray-400">
+                          {custodyWallets.filter((w) => w.account_id === acc.id).length} wallet(s)
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p className="text-[10px] text-gray-400 mt-1">
+                The wallet will be added to this account. An account groups related wallets within an entity.
+              </p>
+            </div>
+          )}
+
+          {/* Step 4: Currency */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1.5">3</span>
+              <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1.5">4</span>
               Select Currency
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -680,7 +727,7 @@ function CreateWalletModal({
           {/* Step 4: Initial group assignment */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1.5">4</span>
+              <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1.5">5</span>
               Assign to Groups
               <span className="text-xs text-red-500 ml-1">*required</span>
             </label>
@@ -773,9 +820,9 @@ function CreateWalletModal({
           <button
             onClick={() => {
               if (selectedCurrency && label.trim() && selectedEntity && hasAtLeastOneGroup)
-                onCreate(selectedCurrency, label.trim(), selectedEntity, assignments);
+                onCreate(selectedCurrency, label.trim(), selectedEntity, selectedAccount!, assignments);
             }}
-            disabled={!selectedCurrency || !label.trim() || !selectedEntity || !hasAtLeastOneGroup}
+            disabled={!selectedCurrency || !label.trim() || !selectedEntity || !selectedAccount || !hasAtLeastOneGroup}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Create Wallet
@@ -810,7 +857,7 @@ export default function CustodyWalletsPage() {
   });
   const uniqueCurrenciesInWallets = Array.from(new Set(wallets.map((w) => w.currency)));
 
-  function handleCreate(currency: string, label: string, entityId: string, initialAssignments: WalletGroupAssignment[]) {
+  function handleCreate(currency: string, label: string, entityId: string, accountId: string, initialAssignments: WalletGroupAssignment[]) {
     const curr = currencies.find((c) => c.code === currency);
     const newWallet: CustodyWallet = {
       id: `wallet-${currency.toLowerCase()}-${String(wallets.length + 1).padStart(2, "0")}`,
@@ -820,6 +867,7 @@ export default function CustodyWalletsPage() {
       address: `0x${Math.random().toString(16).slice(2, 42)}`,
       organization_id: "org-acme",
       entity_id: entityId,
+      account_id: accountId,
       group_assignments: initialAssignments,
       status: "active",
       created_by: "usr-alice",

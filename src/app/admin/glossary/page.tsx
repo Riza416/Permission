@@ -3,6 +3,7 @@
 import {
   Building2,
   Layers,
+  Briefcase,
   Wallet,
   FolderKey,
   Key,
@@ -43,19 +44,42 @@ const glossaryEntries = [
     ],
   },
   {
+    term: "Account",
+    icon: Briefcase,
+    color: "bg-amber-600 text-white",
+    iconColor: "text-white/70",
+    definition:
+      "A container within an entity that groups multiple wallets together. An account represents a logical grouping of related balances — for example, a \"Treasury\" account might hold a BTC wallet, an ETH wallet, and a USD fiat wallet. Clients create accounts within their entities and then add wallets to them. Accounts provide an organizational layer between the entity and individual wallets.",
+    examples: [
+      "US Treasury — contains a BTC wallet, an ETH wallet (crypto reserves for Acme US)",
+      "US Payments — contains a USDC wallet and a USD fiat wallet (used for day-to-day payments)",
+      "EU Operations — contains an ETH wallet (operational funds for Acme EU)",
+      "EU Payments — contains a USDC wallet and a EUR fiat wallet",
+    ],
+    keyPoints: [
+      "An account belongs to a single entity",
+      "An account can hold multiple wallets across different currencies (crypto and fiat)",
+      "Accounts are a way to logically group related wallets — e.g. all treasury wallets vs. all payment wallets",
+      "Wallet-level permissions (View, Send, Manage) are still assigned per wallet, not per account",
+      "An entity can have multiple accounts",
+    ],
+  },
+  {
     term: "Wallet",
     icon: Wallet,
     color: "bg-rose-600 text-white",
     iconColor: "text-white/70",
     definition:
-      "A custody wallet representing a balance tied to a specific asset. For crypto assets (e.g. BTC, ETH), a wallet holds the aggregate balance across all addresses derived from a set of private keys — for example, all Bitcoin address balances for a given BTC wallet. For fiat currencies, a wallet represents the fiat balance held in custody. Wallets are scoped to an entity and individually assigned to groups with specific capability levels.",
+      "A custody wallet representing a balance tied to a specific asset. For crypto assets (e.g. BTC, ETH), a wallet holds the aggregate balance across all addresses derived from a set of private keys — for example, all Bitcoin address balances for a given BTC wallet. For fiat currencies, a wallet represents the fiat balance held in custody. Wallets live inside accounts, which live inside entities. Each wallet is individually assigned to groups with specific capability levels.",
     examples: [
-      "US Treasury Wallet (BTC) — all BTC address balances under one set of keys",
-      "EU Payments Wallet (USDC) — USDC balance for the EU entity",
-      "US Payments Wallet (USD) — fiat USD balance held in custody",
+      "BTC Wallet in US Treasury account — all BTC address balances under one set of keys",
+      "USDC Wallet in EU Payments account — USDC balance for the EU entity",
+      "USD Fiat Wallet in US Payments account — fiat USD balance held in custody",
+      "EUR Fiat Wallet in EU Payments account — fiat EUR balance held in custody",
     ],
     keyPoints: [
-      "Each wallet belongs to one entity",
+      "Each wallet belongs to one account, which belongs to one entity",
+      "An account can contain multiple wallets across different currencies",
       "Wallets are assigned to specific groups — not all groups see all wallets",
       "Each group gets a capability level per wallet: View, Send Transactions, or Full Manage",
       "Having 'Send Transactions' permission does not mean send from every wallet — only wallets explicitly assigned to that group",
