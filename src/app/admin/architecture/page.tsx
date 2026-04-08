@@ -444,7 +444,7 @@ export default function ArchitecturePage() {
             <div className="flex flex-col items-center py-1">
               <div className="w-0.5 h-4 bg-gray-300" />
               <span className="text-[10px] text-amber-600 font-semibold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                Super Admin creates entities &amp; assigns an admin to each one
+                Super Admin creates entities &amp; assigns admins to them
               </span>
               <ArrowDown className="w-3 h-3 text-gray-400" />
             </div>
@@ -454,7 +454,7 @@ export default function ArchitecturePage() {
               {[
                 {
                   name: "Acme US",
-                  admin: "Bob (Admin)",
+                  admins: ["Bob", "Carol"],
                   groups: [
                     { name: "Finance", color: "bg-blue-50 border-blue-200" },
                     { name: "Compliance", color: "bg-purple-50 border-purple-200" },
@@ -463,7 +463,7 @@ export default function ArchitecturePage() {
                 },
                 {
                   name: "Acme EU",
-                  admin: "Carol (Admin)",
+                  admins: ["Carol", "Fiona"],
                   groups: [
                     { name: "Operations", color: "bg-emerald-50 border-emerald-200" },
                     { name: "Compliance", color: "bg-purple-50 border-purple-200" },
@@ -471,7 +471,7 @@ export default function ArchitecturePage() {
                 },
                 {
                   name: "Acme APAC",
-                  admin: "Fiona (Admin)",
+                  admins: ["Fiona"],
                   groups: [
                     { name: "Operations", color: "bg-emerald-50 border-emerald-200" },
                   ],
@@ -481,13 +481,17 @@ export default function ArchitecturePage() {
                   <div className="bg-indigo-100 px-4 py-2 flex items-center gap-2">
                     <Layers className="w-3.5 h-3.5 text-indigo-500" />
                     <span className="text-xs font-bold text-indigo-700">{ent.name}</span>
-                    <span className="ml-auto flex items-center gap-1 text-[10px] text-indigo-500">
-                      <Shield className="w-3 h-3" />
-                      {ent.admin}
-                    </span>
+                    <div className="ml-auto flex items-center gap-1.5">
+                      {ent.admins.map((a) => (
+                        <span key={a} className="flex items-center gap-1 text-[10px] text-indigo-600 bg-indigo-200/60 px-1.5 py-0.5 rounded-full font-medium">
+                          <Shield className="w-2.5 h-2.5" />
+                          {a}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                   <div className="px-4 py-2.5 bg-white">
-                    <p className="text-[10px] text-gray-400 mb-2">Groups in this entity (created by {ent.admin.split(" ")[0]}):</p>
+                    <p className="text-[10px] text-gray-400 mb-2">Groups in this entity:</p>
                     <div className="flex flex-wrap gap-2">
                       {ent.groups.map((g) => (
                         <div key={g.name} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium text-gray-700 ${g.color}`}>
@@ -501,21 +505,25 @@ export default function ArchitecturePage() {
               ))}
             </div>
 
-            {/* Callout: groups are entity-scoped */}
+            {/* Callout: groups are entity-scoped, admins can span entities */}
             <div className="w-full max-w-2xl mt-2 bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-              <p className="text-[11px] font-bold text-indigo-800 mb-1.5">Groups are entity-scoped, not shared across entities</p>
+              <p className="text-[11px] font-bold text-indigo-800 mb-1.5">Groups are entity-scoped &mdash; admins can span multiple entities</p>
               <ul className="space-y-1 text-[10px] text-indigo-700">
                 <li className="flex items-start gap-1.5">
                   <span className="mt-1 w-1 h-1 rounded-full bg-indigo-500 flex-shrink-0" />
-                  <span><strong>Each admin only manages their assigned entity.</strong> Bob is admin of Acme US only &mdash; he cannot manage Acme EU.</span>
+                  <span><strong>Entities can have multiple admins.</strong> Acme US has both Bob and Carol as admins.</span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="mt-1 w-1 h-1 rounded-full bg-indigo-500 flex-shrink-0" />
-                  <span><strong>&quot;Finance&quot; in Acme US is a completely separate group from &quot;Compliance&quot; in Acme EU.</strong> Groups do not cross entity boundaries.</span>
+                  <span><strong>Admins can be assigned to multiple entities</strong> by the Super Admin. Carol is admin of both Acme US and Acme EU.</span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="mt-1 w-1 h-1 rounded-full bg-indigo-500 flex-shrink-0" />
-                  <span><strong>An admin can only create groups, assign permissions, and add users within their own entity.</strong></span>
+                  <span><strong>Groups do not cross entity boundaries.</strong> &quot;Finance&quot; in Acme US is a completely separate group from &quot;Compliance&quot; in Acme EU.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1 w-1 h-1 rounded-full bg-indigo-500 flex-shrink-0" />
+                  <span><strong>An admin can only manage groups, permissions, and users within entities they are assigned to.</strong></span>
                 </li>
               </ul>
             </div>
