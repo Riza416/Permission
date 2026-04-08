@@ -16,6 +16,7 @@ import {
   FileText,
   Lock,
   ChevronDown,
+  Wallet,
 } from "lucide-react";
 
 // --- Role Context ---
@@ -89,6 +90,7 @@ const navSections: NavSection[] = [
     title: "Operations",
     restricted: () => false,
     items: [
+      { label: "Custody Wallets", href: "/admin/custody-wallets", icon: Wallet },
       { label: "Reset Requests", href: "/admin/resets", icon: RotateCcw },
       { label: "Audit Logs", href: "/admin/audit-logs", icon: FileText },
     ],

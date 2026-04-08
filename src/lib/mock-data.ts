@@ -198,6 +198,19 @@ export const permissions: Permission[] = [
     description: 'Deactivate or suspend existing client users',
     scope: 'client',
   },
+  // Custody wallet permissions (client)
+  {
+    id: 'perm-custody-wallet-create',
+    name: 'custody.wallet.create',
+    description: 'Create new crypto custody wallets scoped by currency',
+    scope: 'client',
+  },
+  {
+    id: 'perm-custody-wallet-assign-group',
+    name: 'custody.wallet.assign_group',
+    description: 'Assign or unassign user groups to/from custody wallets',
+    scope: 'client',
+  },
   // Manager permissions
   {
     id: 'perm-edit-merchant-details',
@@ -268,6 +281,8 @@ export const permissionGroups: PermissionGroup[] = [
       'perm-edit-settings',
       'perm-create-client-users',
       'perm-deactivate-client-users',
+      'perm-custody-wallet-create',
+      'perm-custody-wallet-assign-group',
     ],
     is_super_admin: true,
     created_at: '2024-01-21T08:00:00Z',
@@ -571,6 +586,69 @@ export const resetRequests: ResetRequest[] = [
 ];
 
 // ─────────────────────────────────────────────
+// Custody Wallets
+// ─────────────────────────────────────────────
+
+export interface CustodyWallet {
+  id: string;
+  currency: string;
+  currency_name: string;
+  address: string;
+  organization_id: string;
+  assigned_group_ids: string[];
+  status: 'active' | 'frozen';
+  created_by: string;
+  created_at: string;
+}
+
+export const custodyWallets: CustodyWallet[] = [
+  {
+    id: 'wallet-btc-01',
+    currency: 'BTC',
+    currency_name: 'Bitcoin',
+    address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    organization_id: 'org-acme',
+    assigned_group_ids: ['grp-acme-super-admin', 'grp-acme-finance'],
+    status: 'active',
+    created_by: 'usr-alice',
+    created_at: '2024-04-01T09:00:00Z',
+  },
+  {
+    id: 'wallet-eth-01',
+    currency: 'ETH',
+    currency_name: 'Ethereum',
+    address: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD28',
+    organization_id: 'org-acme',
+    assigned_group_ids: ['grp-acme-super-admin'],
+    status: 'active',
+    created_by: 'usr-alice',
+    created_at: '2024-04-02T10:00:00Z',
+  },
+  {
+    id: 'wallet-usdc-01',
+    currency: 'USDC',
+    currency_name: 'USD Coin',
+    address: '0x8B3f5393bA08c24cc7ff5A66a832562aAB7bC95f',
+    organization_id: 'org-acme',
+    assigned_group_ids: ['grp-acme-super-admin', 'grp-acme-finance', 'grp-acme-operations'],
+    status: 'active',
+    created_by: 'usr-alice',
+    created_at: '2024-04-03T11:00:00Z',
+  },
+  {
+    id: 'wallet-btc-02',
+    currency: 'BTC',
+    currency_name: 'Bitcoin',
+    address: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
+    organization_id: 'org-acme',
+    assigned_group_ids: [],
+    status: 'frozen',
+    created_by: 'usr-alice',
+    created_at: '2024-04-05T14:00:00Z',
+  },
+];
+
+// ─────────────────────────────────────────────
 // Implementation Roadmap Tickets
 // ─────────────────────────────────────────────
 
@@ -787,6 +865,85 @@ export const tickets: Ticket[] = [
       'All UI actions disabled/hidden based on the logged-in user\'s own permissions',
       'Accessibility: WCAG 2.1 AA compliant',
       'E2E tests cover primary admin workflows using a test account',
+    ],
+    featureFlag: true,
+  },
+  // ── Custody Wallet Tickets ──
+  {
+    id: 'RBAC-12',
+    title: 'Define Custody Wallet Permission Types',
+    description:
+      'Introduce custody.wallet.create and custody.wallet.assign_group permission types into the central permission registry for custody wallet operations.',
+    status: 'not-started',
+    priority: 12,
+    dependencies: ['RBAC-4'],
+    userStory:
+      'As a platform administrator, I want to define new permission types for custody wallet management so that only authorized users can create crypto wallets and assign groups to them.',
+    definitionOfDone: [
+      'New custody wallet permission types are defined and added to the permission registry',
+      'Permission types follow the naming conventions and structure of the new permissions framework',
+      'Permissions are documented in the permissions registry with clear descriptions',
+      'Unit tests cover permission type validation and registration',
+    ],
+    featureFlag: true,
+  },
+  {
+    id: 'RBAC-13',
+    title: 'Permission-Gated Wallet Creation by Currency',
+    description:
+      'Implement the backend logic that allows authorized users to create new crypto wallets scoped by currency. Enforces custody.wallet.create permission check.',
+    status: 'not-started',
+    priority: 13,
+    dependencies: ['RBAC-12'],
+    userStory:
+      'As a user with the custody.wallet.create permission, I want to create new crypto wallets for specific currencies so that I can manage custody wallets for different assets on the platform.',
+    definitionOfDone: [
+      'API endpoint for creating a new crypto wallet by currency is implemented',
+      'Permission check enforces custody.wallet.create before allowing wallet creation',
+      'Users without the correct permission receive a 403 Forbidden response',
+      'Wallet is created and associated with the specified currency',
+      'Audit log entry is created for each wallet creation event',
+      'Unit and integration tests pass',
+    ],
+    featureFlag: true,
+  },
+  {
+    id: 'RBAC-14',
+    title: 'Permission-Gated Group Assignment to Wallets',
+    description:
+      'Implement the backend logic that allows authorized users to assign user groups to crypto wallets. Enforces custody.wallet.assign_group permission check.',
+    status: 'not-started',
+    priority: 14,
+    dependencies: ['RBAC-12', 'RBAC-13'],
+    userStory:
+      'As a user with the custody.wallet.assign_group permission, I want to assign user groups to crypto wallets so that the correct teams have access to the appropriate wallets.',
+    definitionOfDone: [
+      'API endpoint for assigning groups to a wallet is implemented',
+      'Permission check enforces custody.wallet.assign_group before allowing assignment',
+      'Users without the correct permission receive a 403 Forbidden response',
+      'Groups can be assigned and unassigned from wallets',
+      'Audit log entry is created for each group assignment/unassignment event',
+      'Unit and integration tests pass',
+    ],
+    featureFlag: true,
+  },
+  {
+    id: 'RBAC-15',
+    title: 'Custody Wallet Management UI',
+    description:
+      'Build the frontend interface for custody wallet management: create wallets by currency, view wallets with assigned groups, and assign/unassign groups. UI respects custody wallet permissions.',
+    status: 'not-started',
+    priority: 15,
+    dependencies: ['RBAC-13', 'RBAC-14'],
+    userStory:
+      'As a user with custody wallet permissions, I want a UI to create new crypto wallets by currency and assign groups to those wallets so that I can manage custody operations directly from the platform.',
+    definitionOfDone: [
+      'UI for creating a new wallet with currency selection is implemented',
+      'UI for assigning/unassigning groups to wallets is implemented',
+      'Permission-based visibility: controls are hidden or disabled for users without the relevant permissions',
+      'Error states and loading states are handled gracefully',
+      'UI is consistent with existing platform design patterns',
+      'E2E tests pass',
     ],
     featureFlag: true,
   },

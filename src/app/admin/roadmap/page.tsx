@@ -76,6 +76,23 @@ const phases = [
       tagBg: "bg-emerald-100 text-emerald-700",
     },
   },
+  {
+    id: 5,
+    label: "Phase 5",
+    name: "Custody Wallets",
+    ticketIds: ["RBAC-12", "RBAC-13", "RBAC-14", "RBAC-15"],
+    color: {
+      section: "bg-rose-50 border-rose-200",
+      header: "bg-rose-600",
+      badge: "bg-rose-600 text-white",
+      ring: "ring-rose-300",
+      dot: "bg-rose-500",
+      connector: "border-rose-300",
+      priorityBg: "bg-rose-600",
+      cardBorder: "border-rose-200 hover:border-rose-400",
+      tagBg: "bg-rose-100 text-rose-700",
+    },
+  },
 ];
 
 // ─────────────────────────────────────────────
