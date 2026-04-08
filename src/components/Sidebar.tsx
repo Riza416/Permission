@@ -18,6 +18,7 @@ import {
   ChevronDown,
   Wallet,
   Network,
+  BookOpen,
 } from "lucide-react";
 
 // --- Role Context ---
@@ -68,6 +69,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "Roadmap", href: "/admin/roadmap", icon: Map },
       { label: "Architecture", href: "/admin/architecture", icon: Network },
+      { label: "Glossary", href: "/admin/glossary", icon: BookOpen },
       { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     ],
   },
