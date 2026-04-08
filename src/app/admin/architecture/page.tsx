@@ -440,53 +440,93 @@ export default function ArchitecturePage() {
               </div>
             </div>
 
-            {/* Arrow: Super Admin creates entities */}
+            {/* Arrow: Super Admin creates entities & assigns admins */}
             <div className="flex flex-col items-center py-1">
               <div className="w-0.5 h-4 bg-gray-300" />
               <span className="text-[10px] text-amber-600 font-semibold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                Super Admin creates entities &amp; assigns admins to them
+                Super Admin creates entities &amp; assigns an admin to each one
               </span>
               <ArrowDown className="w-3 h-3 text-gray-400" />
             </div>
 
-            {/* ── ENTITIES ── */}
-            <div className="w-full max-w-2xl grid grid-cols-3 gap-3">
-              {["Acme US", "Acme EU", "Acme APAC"].map((name) => (
-                <div key={name} className="border-2 border-indigo-300 rounded-lg overflow-hidden">
-                  <div className="bg-indigo-100 px-3 py-1.5 flex items-center gap-1.5">
+            {/* ── ENTITIES WITH THEIR OWN ADMINS & GROUPS ── */}
+            <div className="w-full max-w-2xl space-y-3">
+              {[
+                {
+                  name: "Acme US",
+                  admin: "Bob (Admin)",
+                  groups: [
+                    { name: "Finance", color: "bg-blue-50 border-blue-200" },
+                    { name: "Compliance", color: "bg-purple-50 border-purple-200" },
+                    { name: "Treasury Ops", color: "bg-cyan-50 border-cyan-200" },
+                  ],
+                },
+                {
+                  name: "Acme EU",
+                  admin: "Carol (Admin)",
+                  groups: [
+                    { name: "Operations", color: "bg-emerald-50 border-emerald-200" },
+                    { name: "Compliance", color: "bg-purple-50 border-purple-200" },
+                  ],
+                },
+                {
+                  name: "Acme APAC",
+                  admin: "Fiona (Admin)",
+                  groups: [
+                    { name: "Operations", color: "bg-emerald-50 border-emerald-200" },
+                  ],
+                },
+              ].map((ent) => (
+                <div key={ent.name} className="border-2 border-indigo-300 rounded-xl overflow-hidden">
+                  <div className="bg-indigo-100 px-4 py-2 flex items-center gap-2">
                     <Layers className="w-3.5 h-3.5 text-indigo-500" />
-                    <span className="text-xs font-bold text-indigo-700">{name}</span>
+                    <span className="text-xs font-bold text-indigo-700">{ent.name}</span>
+                    <span className="ml-auto flex items-center gap-1 text-[10px] text-indigo-500">
+                      <Shield className="w-3 h-3" />
+                      {ent.admin}
+                    </span>
                   </div>
-                  <div className="px-3 py-2 text-[10px] text-gray-500">
-                    Isolated data boundary
+                  <div className="px-4 py-2.5 bg-white">
+                    <p className="text-[10px] text-gray-400 mb-2">Groups in this entity (created by {ent.admin.split(" ")[0]}):</p>
+                    <div className="flex flex-wrap gap-2">
+                      {ent.groups.map((g) => (
+                        <div key={g.name} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium text-gray-700 ${g.color}`}>
+                          <FolderKey className="w-3 h-3 text-gray-400" />
+                          {g.name}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Arrow: Admin creates groups */}
+            {/* Callout: groups are entity-scoped */}
+            <div className="w-full max-w-2xl mt-2 bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+              <p className="text-[11px] font-bold text-indigo-800 mb-1.5">Groups are entity-scoped, not shared across entities</p>
+              <ul className="space-y-1 text-[10px] text-indigo-700">
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1 w-1 h-1 rounded-full bg-indigo-500 flex-shrink-0" />
+                  <span><strong>Each admin only manages their assigned entity.</strong> Bob is admin of Acme US only &mdash; he cannot manage Acme EU.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1 w-1 h-1 rounded-full bg-indigo-500 flex-shrink-0" />
+                  <span><strong>&quot;Finance&quot; in Acme US is a completely separate group from &quot;Compliance&quot; in Acme EU.</strong> Groups do not cross entity boundaries.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1 w-1 h-1 rounded-full bg-indigo-500 flex-shrink-0" />
+                  <span><strong>An admin can only create groups, assign permissions, and add users within their own entity.</strong></span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Arrow: Admin creates groups within their entity */}
             <div className="flex flex-col items-center py-1">
               <div className="w-0.5 h-4 bg-gray-300" />
               <span className="text-[10px] text-blue-600 font-semibold bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                Admins create groups &amp; assign permissions from the registry
+                each entity admin assigns permissions from the registry to their entity&apos;s groups
               </span>
               <ArrowDown className="w-3 h-3 text-gray-400" />
-            </div>
-
-            {/* ── GROUPS ── */}
-            <div className="w-full max-w-2xl grid grid-cols-4 gap-2">
-              {[
-                { name: "Finance", color: "border-blue-300 bg-blue-50" },
-                { name: "Operations", color: "border-emerald-300 bg-emerald-50" },
-                { name: "Compliance", color: "border-purple-300 bg-purple-50" },
-                { name: "Treasury Ops", color: "border-cyan-300 bg-cyan-50" },
-              ].map((g) => (
-                <div key={g.name} className={`border-2 rounded-lg p-2.5 text-center ${g.color}`}>
-                  <FolderKey className="w-4 h-4 text-gray-400 mx-auto mb-1" />
-                  <p className="text-xs font-semibold text-gray-700">{g.name}</p>
-                  <p className="text-[10px] text-gray-400">Group</p>
-                </div>
-              ))}
             </div>
 
             {/* Arrow: Permissions are assigned to groups */}
@@ -719,23 +759,23 @@ export default function ArchitecturePage() {
               <ol className="space-y-1.5 text-[11px] text-gray-300">
                 <li className="flex items-start gap-2">
                   <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-                  <span><strong className="text-white">Super Admin</strong> creates <strong className="text-indigo-300">entities</strong> and assigns admins to each entity</span>
+                  <span><strong className="text-white">Super Admin</strong> creates <strong className="text-indigo-300">entities</strong> and assigns an <strong className="text-blue-300">admin</strong> to each entity</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-blue-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-                  <span><strong className="text-white">Admins</strong> create <strong className="text-emerald-300">groups</strong> and pick permissions from the <strong className="text-emerald-300">registry</strong> to assign to each group</span>
+                  <span><strong className="text-white">Each entity admin</strong> creates <strong className="text-emerald-300">groups within their entity only</strong> and assigns permissions from the registry. Groups are <strong className="text-indigo-300">not shared</strong> across entities.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                  <span><strong className="text-white">Wallets</strong> are created within entities and <strong className="text-rose-300">individually assigned to specific groups</strong> with a capability level (View, Send, or Manage)</span>
+                  <span><strong className="text-white">Wallets</strong> are created within entities and <strong className="text-rose-300">individually assigned to specific groups in that entity</strong> with a capability level (View, Send, or Manage)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">!</span>
-                  <span><strong className="text-rose-300">Not every group gets every wallet.</strong> A group with &quot;Send Transactions&quot; can only send from wallets it is explicitly assigned to &mdash; not all wallets in the org</span>
+                  <span><strong className="text-rose-300">Not every group gets every wallet.</strong> A group with &quot;Send Transactions&quot; can only send from wallets it is explicitly assigned to &mdash; not all wallets in the entity</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-gray-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
-                  <span><strong className="text-white">Users</strong> inherit their group&apos;s permissions + only the wallet access that their group has been granted on each specific wallet</span>
+                  <span><strong className="text-white">Users</strong> belong to an entity, inherit their group&apos;s permissions, and only get wallet access that their group has been granted on each specific wallet</span>
                 </li>
               </ol>
             </div>
