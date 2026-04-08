@@ -538,11 +538,118 @@ export default function ArchitecturePage() {
               </div>
             </div>
 
+            {/* Arrow: wallets are created and assigned to groups */}
+            <div className="flex flex-col items-center py-1">
+              <div className="w-0.5 h-4 bg-gray-300" />
+              <span className="text-[10px] text-rose-600 font-semibold bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
+                wallets are created within entities &amp; assigned to specific groups
+              </span>
+              <ArrowDown className="w-3 h-3 text-gray-400" />
+            </div>
+
+            {/* ── WALLETS ── */}
+            <div className="w-full max-w-2xl border-2 border-rose-300 rounded-xl overflow-hidden">
+              <div className="bg-rose-100 px-5 py-2.5 flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-rose-600" />
+                <span className="text-sm font-bold text-rose-800">Custody Wallets</span>
+                <span className="text-rose-500 text-[10px] ml-auto">each wallet is assigned to specific groups</span>
+              </div>
+              <div className="bg-white p-4 space-y-3">
+                {/* Example wallets with their group assignments */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    {
+                      name: "US Treasury (BTC)",
+                      entity: "Acme US",
+                      groups: [
+                        { name: "Finance", cap: "Send", capColor: "bg-amber-100 text-amber-700" },
+                        { name: "Compliance", cap: "View", capColor: "bg-blue-100 text-blue-700" },
+                      ],
+                      noAccess: ["Operations", "Treasury Ops"],
+                    },
+                    {
+                      name: "EU Ops (ETH)",
+                      entity: "Acme EU",
+                      groups: [
+                        { name: "Operations", cap: "Send", capColor: "bg-amber-100 text-amber-700" },
+                      ],
+                      noAccess: ["Finance", "Compliance", "Treasury Ops"],
+                    },
+                    {
+                      name: "US Payments (USDC)",
+                      entity: "Acme US",
+                      groups: [
+                        { name: "Finance", cap: "Send", capColor: "bg-amber-100 text-amber-700" },
+                        { name: "Treasury Ops", cap: "Manage", capColor: "bg-rose-100 text-rose-700" },
+                      ],
+                      noAccess: ["Compliance", "Operations"],
+                    },
+                    {
+                      name: "EU Payments (USDC)",
+                      entity: "Acme EU",
+                      groups: [
+                        { name: "Compliance", cap: "View", capColor: "bg-blue-100 text-blue-700" },
+                        { name: "Operations", cap: "View", capColor: "bg-blue-100 text-blue-700" },
+                      ],
+                      noAccess: ["Finance", "Treasury Ops"],
+                    },
+                  ].map((w) => (
+                    <div key={w.name} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Wallet className="w-3.5 h-3.5 text-rose-400" />
+                        <span className="text-xs font-semibold text-gray-800">{w.name}</span>
+                      </div>
+                      <p className="text-[10px] text-indigo-500 font-medium mb-2">{w.entity}</p>
+                      <div className="space-y-1">
+                        {w.groups.map((g) => (
+                          <div key={g.name} className="flex items-center gap-2">
+                            <Eye className="w-3 h-3 text-emerald-500" />
+                            <span className="text-[10px] text-gray-600">{g.name}</span>
+                            <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${g.capColor}`}>{g.cap}</span>
+                          </div>
+                        ))}
+                        {w.noAccess.map((g) => (
+                          <div key={g} className="flex items-center gap-2">
+                            <EyeOff className="w-3 h-3 text-red-300" />
+                            <span className="text-[10px] text-gray-300">{g}</span>
+                            <span className="text-[9px] text-red-300">no access</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Critical callout */}
+                <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 space-y-2">
+                  <p className="text-[11px] font-bold text-rose-800">Important: wallet access is per-wallet, not global</p>
+                  <ul className="space-y-1.5 text-[10px] text-rose-700">
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1 w-1 h-1 rounded-full bg-rose-500 flex-shrink-0" />
+                      <span><strong>Not all groups have access to the same wallets.</strong> Finance can access US wallets but has zero access to EU wallets.</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1 w-1 h-1 rounded-full bg-rose-500 flex-shrink-0" />
+                      <span><strong>Having &quot;Send Transactions&quot; does not mean send from all wallets.</strong> Finance can send from US Treasury but cannot even see EU Operations.</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1 w-1 h-1 rounded-full bg-rose-500 flex-shrink-0" />
+                      <span><strong>Each wallet is individually assigned to groups</strong> with a specific capability level (View, Send, or Manage) per group.</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1 w-1 h-1 rounded-full bg-rose-500 flex-shrink-0" />
+                      <span><strong>When a wallet is created, it must be assigned to at least one group.</strong> Unassigned wallets are inaccessible.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
             {/* Arrow: groups assigned to users */}
             <div className="flex flex-col items-center py-1">
               <div className="w-0.5 h-4 bg-gray-300" />
               <span className="text-[10px] text-gray-500 font-semibold bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
-                users are added to groups &rarr; inherit all group permissions
+                users are added to groups &rarr; inherit group permissions + wallet access
               </span>
               <ArrowDown className="w-3 h-3 text-gray-400" />
             </div>
@@ -552,16 +659,33 @@ export default function ArchitecturePage() {
               <div className="flex items-center gap-2 mb-3">
                 <Users className="w-4 h-4 text-gray-500" />
                 <span className="text-xs font-bold text-gray-700">Users</span>
+                <span className="text-[10px] text-gray-400">&mdash; what each user can actually do</span>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
-                  { name: "Bob", group: "Finance", entity: "Acme US", perms: "transactions, invoices, wallet.view, wallet.send" },
-                  { name: "Carol", group: "Operations", entity: "Acme EU", perms: "transactions, invoices, wallet.view" },
-                  { name: "Dave", group: "Compliance", entity: "Acme US", perms: "view_reporting, wallet.view" },
-                  { name: "Eve", group: "Treasury Ops", entity: "Acme US", perms: "wallet.create, wallet.send, wallet.manage" },
+                  {
+                    name: "Bob", group: "Finance", entity: "Acme US",
+                    can: ["Send from US Treasury (BTC)", "Send from US Payments (USDC)", "Create transactions & invoices"],
+                    cannot: ["Access any EU wallet", "Access EU Operations wallet"],
+                  },
+                  {
+                    name: "Carol", group: "Operations", entity: "Acme EU",
+                    can: ["Send from EU Ops (ETH)", "View EU Payments (USDC)", "Create transactions & invoices"],
+                    cannot: ["Access any US wallet", "Send from EU Payments"],
+                  },
+                  {
+                    name: "Dave", group: "Compliance", entity: "Acme US",
+                    can: ["View US Treasury (BTC)", "View EU Payments (USDC)", "View reporting"],
+                    cannot: ["Access US Payments", "Access EU Ops", "Send from any wallet"],
+                  },
+                  {
+                    name: "Eve", group: "Treasury Ops", entity: "Acme US",
+                    can: ["Manage US Payments (USDC)", "Create new wallets"],
+                    cannot: ["Access US Treasury", "Access any EU wallet"],
+                  },
                 ].map((u) => (
                   <div key={u.name} className="bg-white border border-gray-200 rounded-lg p-2.5">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mb-2">
                       <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600">
                         {u.name[0]}
                       </div>
@@ -570,7 +694,20 @@ export default function ArchitecturePage() {
                         <p className="text-[10px] text-gray-400">{u.group} &middot; {u.entity}</p>
                       </div>
                     </div>
-                    <p className="text-[9px] text-gray-400 mt-1.5 font-mono leading-relaxed">{u.perms}</p>
+                    <div className="space-y-0.5">
+                      {u.can.map((c) => (
+                        <div key={c} className="flex items-center gap-1.5 text-[9px]">
+                          <Eye className="w-2.5 h-2.5 text-emerald-500 flex-shrink-0" />
+                          <span className="text-emerald-700">{c}</span>
+                        </div>
+                      ))}
+                      {u.cannot.map((c) => (
+                        <div key={c} className="flex items-center gap-1.5 text-[9px]">
+                          <EyeOff className="w-2.5 h-2.5 text-red-300 flex-shrink-0" />
+                          <span className="text-red-400">{c}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -589,12 +726,16 @@ export default function ArchitecturePage() {
                   <span><strong className="text-white">Admins</strong> create <strong className="text-emerald-300">groups</strong> and pick permissions from the <strong className="text-emerald-300">registry</strong> to assign to each group</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="bg-emerald-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                  <span>Wallet operations (<em>create, view, send, manage</em>) are <strong className="text-rose-300">just permissions in the registry</strong> &mdash; assigned to groups like any other permission</span>
+                  <span className="bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                  <span><strong className="text-white">Wallets</strong> are created within entities and <strong className="text-rose-300">individually assigned to specific groups</strong> with a capability level (View, Send, or Manage)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">!</span>
+                  <span><strong className="text-rose-300">Not every group gets every wallet.</strong> A group with &quot;Send Transactions&quot; can only send from wallets it is explicitly assigned to &mdash; not all wallets in the org</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-gray-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
-                  <span><strong className="text-white">Users</strong> are added to groups and inherit all permissions &mdash; including what they can do with wallets</span>
+                  <span><strong className="text-white">Users</strong> inherit their group&apos;s permissions + only the wallet access that their group has been granted on each specific wallet</span>
                 </li>
               </ol>
             </div>
