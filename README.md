@@ -1,36 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RBAC Permissions UI Mock-up
 
-## Getting Started
+Interactive mock-up of the Role-Based Access Control (RBAC) permission structure for the Flux platform. Built to visualize and validate the permissions model before implementation.
 
-First, run the development server:
+## Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the mock-up.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How the Permission System Works
 
-## Learn More
+### Hierarchy
 
-To learn more about Next.js, take a look at the following resources:
+```
+Organization (e.g. Acme Corp)
+│
+├── Super Admin (exactly one per org — creates entities, assigns admins)
+│
+├── Entity: Acme US
+│   ├── Admins: Bob, Carol
+│   ├── Groups (entity-scoped, created by admins):
+│   │   ├── Finance      → [create_transactions, approve_transactions, ...]
+│   │   ├── Compliance   → [view_reporting]
+│   │   └── Treasury Ops → [custody.wallet.create, custody.wallet.manage, ...]
+│   ├── Account: US Treasury (optional grouping)
+│   │   ├── BTC Wallet  → Finance: Send, Compliance: View
+│   │   └── ETH Wallet  → Finance: View
+│   └── Account: US Payments
+│       ├── USDC Wallet → Finance: Send
+│       └── USD Wallet  → Finance: Send
+│
+├── Entity: Acme EU
+│   ├── Admins: Carol, Fiona (Carol spans both US and EU)
+│   ├── Groups:
+│   │   ├── Operations  → [create_transactions, ...]
+│   │   └── Compliance  → [view_reporting]  (separate from US Compliance)
+│   └── ...wallets with different group assignments
+│
+└── Entity: Acme APAC
+    ├── Admins: Fiona
+    └── ...
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Key Concepts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Concept | Description |
+|---|---|
+| **Organization** | Top-level tenant. Either a client (Acme Corp) or manager (Flux Operations). All structures scoped here. |
+| **Entity** | Operational sub-unit (e.g. Acme US, Acme EU). Data isolation boundary. Has its own admins and groups. |
+| **Account** | Optional container grouping related wallets within an entity (e.g. "Treasury" holds BTC + ETH wallets). |
+| **Wallet** | A balance tied to an asset. Crypto: aggregate of all addresses for a keyset. Fiat: balance in custody. |
+| **Group** | Entity-scoped bundle of permissions. "Finance" in Acme US is separate from "Finance" in Acme EU. |
+| **Permission** | System-defined action from the central registry. Cannot be created at runtime. |
+| **Super Admin** | Exactly one per org. All permissions auto-granted. Creates entities, assigns admins. Cannot self-promote. |
+| **Admin** | Assigned to specific entities by Super Admin. Can span multiple entities. Manages groups/users/wallets within assigned entities. |
+| **User** | Belongs to org, assigned to entities, member of groups. Access = entity assignment + group permissions. |
 
-## Deploy on Vercel
+### Wallet Access Model
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Wallet access is **per-wallet, not global**:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Each wallet is individually assigned to specific groups with a **capability level**:
+  - **View Only** — see balances, history, addresses
+  - **Send Transactions** — create and submit transactions (includes View)
+  - **Full Manage** — settings, freeze/unfreeze, group assignment (includes all)
+- **Not all groups get all wallets.** Finance can Send from US Treasury but have zero access to EU wallets.
+- **Having "Send Transactions" does NOT mean send from every wallet** — only wallets explicitly assigned to that group.
+- When a wallet is created, it must be assigned to at least one group.
+- Accounts are optional — wallets can be standalone or grouped into accounts.
+
+### Role Summary
+
+| Capability | Super Admin | Admin | User |
+|---|---|---|---|
+| Create entities | Yes | No | No |
+| Assign admins to entities | Yes | No | No |
+| Create groups & assign permissions | Yes | Within assigned entities | No |
+| Create/deactivate users | Yes | Within assigned entities | No |
+| Create custody wallets | Yes | If permitted | No |
+| Assign groups to wallets | Yes | No | No |
+| Request password/2FA resets | Yes | Yes | No |
+| View audit logs | Yes | Yes | No |
+| Perform actions (transactions, etc.) | Yes | Yes | Based on group permissions |
+
+### Scoping Rules
+
+- **Groups do not cross entity boundaries** — each entity's groups are independent
+- **Admins only manage their assigned entities** — an admin of Acme US cannot manage Acme EU (unless also assigned there)
+- **Entities can have multiple admins** and **admins can span multiple entities**
+- **Client users cannot access manager endpoints** and vice versa
+- **User permissions = union of all group memberships**
+- **All RBAC actions are immutably audit-logged**
+
+---
+
+## Pages in the Mock-up
+
+| Page | Route | Description |
+|---|---|---|
+| Roadmap | `/admin/roadmap` | Implementation ticket board with phases and dependencies |
+| Architecture | `/admin/architecture` | Visual diagrams of the permission structure |
+| Glossary | `/admin/glossary` | Definitions for all RBAC terms |
+| Dashboard | `/admin/dashboard` | Stats overview, recent audit logs, pending resets |
+| Organizations | `/admin/organizations` | Manage client & manager organizations |
+| Users | `/admin/users` | User table with filters, group/entity assignment |
+| Spaces/Entities | `/admin/spaces` | Entity hierarchy, user assignment, data isolation |
+| Permission Registry | `/admin/permissions` | All platform permissions with matrix view |
+| Permission Groups | `/admin/groups` | Group CRUD, permission assignment, Super Admin protection |
+| Custody Wallets | `/admin/custody-wallets` | Wallet creation, account management, group assignment with capabilities |
+| Reset Requests | `/admin/resets` | Password & 2FA reset workflow |
+| Audit Logs | `/admin/audit-logs` | Immutable log timeline with filters |
+
+The sidebar includes a **role switcher** (Super Admin / Admin / User) that changes what's accessible across all pages.
+
+---
+
+## Implementation Tickets
+
+See [TICKETS.md](TICKETS.md) for all 16 implementation tickets across 5 phases with user stories, definitions of done, and dependency maps.
+
+---
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS
+- Lucide React (icons)
