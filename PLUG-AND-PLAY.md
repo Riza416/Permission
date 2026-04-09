@@ -11,8 +11,9 @@ A ready-to-use permissions schema that can be dropped into new or existing proje
 3. [Middleware Logic](#3-middleware-logic)
 4. [Integration Guide — New Projects](#4-integration-guide--new-projects)
 5. [Integration Guide — Existing Projects](#5-integration-guide--existing-projects)
-6. [API Reference](#6-api-reference)
-7. [Optional Add-on: Custody Wallets](#7-optional-add-on-custody-wallets)
+6. [Day-to-Day Operations](#6-day-to-day-operations)
+7. [API Reference](#7-api-reference)
+8. [Optional Add-on: Custody Wallets](#8-optional-add-on-custody-wallets)
 
 ---
 
@@ -141,6 +142,139 @@ CREATE TABLE reset_requests (
 CREATE UNIQUE INDEX idx_one_super_admin_per_entity
   ON permission_groups(entity_id) WHERE is_super_admin = true;
 ```
+
+### Entity Relationship Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          DATABASE SCHEMA OVERVIEW                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌───────────────────────┐
+│    organizations      │
+├───────────────────────┤
+│ id          UUID  PK  │
+│ name        TEXT      │
+│ type        TEXT      │──── 'client' | 'manager'
+│ created_at  TIMESTAMP │
+└──────────┬────────────┘
+           │
+           │ 1 org → many entities
+           ▼
+┌───────────────────────┐       ┌───────────────────────┐
+│      entities         │       │  entity_admins        │
+├───────────────────────┤       ├───────────────────────┤
+│ id          UUID  PK  │◄──┐  │ user_id   UUID  PK,FK │──► users
+│ name        TEXT      │   └──│ entity_id UUID  PK,FK │
+│ organization_id  FK   │──►   └───────────────────────┘
+│ created_at  TIMESTAMP │       many-to-many: which admins
+└──────────┬────────────┘       manage which entities
+           │
+           │ 1 entity → many groups
+           ▼
+┌───────────────────────┐       ┌───────────────────────┐
+│  permission_groups    │       │  group_permissions    │
+├───────────────────────┤       ├───────────────────────┤
+│ id          UUID  PK  │◄──┐  │ group_id      PK,FK   │
+│ name        TEXT      │   └──│ permission_id PK,FK   │──► permissions
+│ organization_id  FK   │──►   └───────────────────────┘
+│ entity_id       FK    │──►   junction: which permissions
+│ is_super_admin  BOOL  │      are in each group
+│ created_at  TIMESTAMP │
+└──────────┬────────────┘
+           │
+           │ many-to-many via user_groups
+           ▼
+┌───────────────────────┐       ┌───────────────────────┐
+│  user_groups          │       │  user_entities        │
+├───────────────────────┤       ├───────────────────────┤
+│ user_id   UUID  PK,FK │──┐   │ user_id   UUID  PK,FK │──┐
+│ group_id  UUID  PK,FK │  │   │ entity_id UUID  PK,FK │  │
+└───────────────────────┘  │   └───────────────────────┘  │
+                           ▼                              ▼
+                   ┌───────────────────────┐
+                   │       users           │
+                   ├───────────────────────┤
+                   │ id          UUID  PK  │
+                   │ name        TEXT      │
+                   │ email       TEXT  UQ  │
+                   │ user_type   TEXT      │──── 'client' | 'manager'
+                   │ organization_id  FK   │──► organizations
+                   │ status      TEXT      │──── 'active' | 'inactive'
+                   │ created_at  TIMESTAMP │
+                   └──────────┬────────────┘
+                              │
+                              │ referenced by
+                              ▼
+┌───────────────────────┐       ┌───────────────────────┐
+│    permissions        │       │    audit_logs         │
+├───────────────────────┤       ├───────────────────────┤
+│ id          UUID  PK  │       │ id          UUID  PK  │
+│ name        TEXT  UQ  │       │ action      TEXT      │
+│ description TEXT      │       │ actor_id    FK        │──► users
+│ scope       TEXT      │       │ target_type TEXT      │
+│ created_at  TIMESTAMP │       │ target_id   UUID     │
+└───────────────────────┘       │ details     TEXT      │
+  system-defined,               │ organization_id FK   │──► organizations
+  immutable at runtime          │ entity_id   FK        │──► entities
+                                │ created_at  TIMESTAMP │
+                                └───────────────────────┘
+                                  append-only, no updates
+
+┌───────────────────────┐
+│   reset_requests      │
+├───────────────────────┤
+│ id              PK    │
+│ requester_id    FK    │──► users
+│ target_user_id  FK    │──► users
+│ reset_type      TEXT  │──── 'password' | '2fa'
+│ status          TEXT  │──── 'pending' | 'completed' | 'rejected'
+│ organization_id FK    │──► organizations
+│ created_at  TIMESTAMP │
+│ completed_at TIMESTAMP│
+└───────────────────────┘
+```
+
+### How the Tables Connect
+
+```
+organizations ─┬── entities ─┬── permission_groups ──── group_permissions ──── permissions
+               │             │                                │
+               │             ├── entity_admins ───────────────┤
+               │             │                                │
+               │             └── (data isolation boundary)    │
+               │                                              │
+               └── users ─────┬── user_entities               │
+                              ├── user_groups ────────────────┘
+                              ├── audit_logs
+                              └── reset_requests
+```
+
+### Permission Resolution Flow
+
+```
+User ──► user_groups ──► permission_groups ──► group_permissions ──► permissions
+  │                           │
+  │                           └── is_super_admin? → grant ALL permissions for org type
+  │
+  └──► user_entities ──► entities ──► data isolation (user only sees their entities' data)
+```
+
+### Quick Reference: What Each Table Does
+
+| Table | Purpose | Key Relationships |
+|---|---|---|
+| `organizations` | Top-level tenant (client or manager) | Parent of everything |
+| `entities` | Data isolation boundary within an org | Belongs to 1 org |
+| `permissions` | System-defined actions (immutable registry) | Referenced by groups |
+| `permission_groups` | Entity-scoped bundle of permissions | Belongs to 1 entity |
+| `group_permissions` | Junction: which permissions are in a group | group ↔ permission |
+| `users` | People on the platform | Belongs to 1 org |
+| `user_entities` | Junction: which entities a user can access | user ↔ entity |
+| `user_groups` | Junction: which groups a user is in | user ↔ group |
+| `entity_admins` | Junction: which users are admins of which entities | user ↔ entity |
+| `audit_logs` | Immutable record of all RBAC actions | References actor, org, entity |
+| `reset_requests` | Password/2FA reset workflow | References requester + target user |
 
 ---
 
@@ -505,7 +639,276 @@ Once the base system is running:
 
 ---
 
-## 6. API Reference
+## 6. Day-to-Day Operations
+
+Once the system is set up, here's how to perform every common operation. Each example is a standalone copy-paste.
+
+### Add a New Entity
+
+*Who can do this: Super Admin*
+
+```sql
+-- Create the entity
+INSERT INTO entities (name, organization_id)
+VALUES ('Acme LATAM', '<org_id>')
+RETURNING id;
+```
+
+### Assign an Admin to an Entity
+
+*Who can do this: Super Admin*
+
+```sql
+-- Give an existing user admin rights over an entity
+INSERT INTO entity_admins (user_id, entity_id)
+VALUES ('<user_id>', '<entity_id>');
+
+-- Also ensure the user is assigned to the entity as a member
+INSERT INTO user_entities (user_id, entity_id)
+VALUES ('<user_id>', '<entity_id>')
+ON CONFLICT DO NOTHING;
+```
+
+An admin can be assigned to multiple entities:
+
+```sql
+-- Carol is admin of both Acme US and Acme EU
+INSERT INTO entity_admins (user_id, entity_id) VALUES ('<carol_id>', '<us_entity_id>');
+INSERT INTO entity_admins (user_id, entity_id) VALUES ('<carol_id>', '<eu_entity_id>');
+```
+
+### Remove an Admin from an Entity
+
+*Who can do this: Super Admin*
+
+```sql
+DELETE FROM entity_admins
+WHERE user_id = '<user_id>' AND entity_id = '<entity_id>';
+```
+
+### Add a New Permission to the Registry
+
+*Who can do this: Developer (via migration)*
+
+```sql
+-- One-liner — no schema changes needed anywhere else
+INSERT INTO permissions (name, description, scope)
+VALUES ('export_reports', 'Export reporting data as CSV or PDF', 'client');
+```
+
+After this, admins can immediately assign it to any group through the UI or API. No code changes, no redeployment of middleware — the middleware already checks against the resolved permission set.
+
+### Add Multiple Permissions at Once
+
+```sql
+INSERT INTO permissions (name, description, scope) VALUES
+  ('bulk_approve_transactions', 'Approve multiple transactions at once',       'client'),
+  ('manage_webhooks',          'Create and configure webhook endpoints',       'client'),
+  ('view_compliance_dashboard','Access the compliance monitoring dashboard',   'manager');
+```
+
+### Create a New Group
+
+*Who can do this: Entity Admin (within their assigned entities)*
+
+```sql
+-- Create the group
+INSERT INTO permission_groups (name, organization_id, entity_id, is_super_admin)
+VALUES ('Treasury', '<org_id>', '<entity_id>', false)
+RETURNING id;
+
+-- Assign permissions to it
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT '<group_id>', id FROM permissions
+WHERE name IN ('create_transactions', 'approve_transactions', 'view_reporting');
+```
+
+### Add a Permission to an Existing Group
+
+*Who can do this: Entity Admin*
+
+```sql
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT '<group_id>', id FROM permissions
+WHERE name = 'export_reports';
+```
+
+### Remove a Permission from a Group
+
+*Who can do this: Entity Admin*
+
+```sql
+DELETE FROM group_permissions
+WHERE group_id = '<group_id>'
+  AND permission_id = (SELECT id FROM permissions WHERE name = 'export_reports');
+```
+
+### View All Permissions in a Group
+
+```sql
+SELECT p.name, p.description, p.scope
+FROM group_permissions gp
+JOIN permissions p ON p.id = gp.permission_id
+WHERE gp.group_id = '<group_id>'
+ORDER BY p.name;
+```
+
+### Delete a Group
+
+*Who can do this: Entity Admin (cannot delete Super Admin group)*
+
+```sql
+-- This cascades: removes all group_permissions and user_groups entries
+DELETE FROM permission_groups
+WHERE id = '<group_id>' AND is_super_admin = false;
+```
+
+### Invite a New User
+
+*Who can do this: Entity Admin with `create_new_client_users` permission*
+
+```sql
+-- Create the user
+INSERT INTO users (name, email, user_type, organization_id)
+VALUES ('Jane Smith', 'jane@acmecorp.com', 'client', '<org_id>')
+RETURNING id;
+
+-- Assign to entity
+INSERT INTO user_entities (user_id, entity_id)
+VALUES ('<user_id>', '<entity_id>');
+
+-- Add to group
+INSERT INTO user_groups (user_id, group_id)
+VALUES ('<user_id>', '<group_id>');
+```
+
+### Assign a User to an Additional Entity
+
+*Who can do this: Super Admin or Admin of the target entity*
+
+```sql
+INSERT INTO user_entities (user_id, entity_id)
+VALUES ('<user_id>', '<new_entity_id>');
+```
+
+### Remove a User from an Entity
+
+```sql
+DELETE FROM user_entities
+WHERE user_id = '<user_id>' AND entity_id = '<entity_id>';
+```
+
+### Add a User to a Group
+
+*Who can do this: Entity Admin*
+
+```sql
+INSERT INTO user_groups (user_id, group_id)
+VALUES ('<user_id>', '<group_id>');
+```
+
+A user can belong to multiple groups — their effective permissions are the union:
+
+```sql
+-- Bob is in both Finance and Treasury groups
+INSERT INTO user_groups (user_id, group_id) VALUES ('<bob_id>', '<finance_group_id>');
+INSERT INTO user_groups (user_id, group_id) VALUES ('<bob_id>', '<treasury_group_id>');
+```
+
+### Remove a User from a Group
+
+```sql
+DELETE FROM user_groups
+WHERE user_id = '<user_id>' AND group_id = '<group_id>';
+```
+
+### Deactivate a User
+
+*Who can do this: Entity Admin with `deactivate_client_users` permission*
+
+```sql
+UPDATE users SET status = 'inactive' WHERE id = '<user_id>';
+```
+
+### Reactivate a User
+
+```sql
+UPDATE users SET status = 'active' WHERE id = '<user_id>';
+```
+
+### View a User's Effective Permissions
+
+```sql
+SELECT DISTINCT p.name, p.description
+FROM user_groups ug
+JOIN group_permissions gp ON gp.group_id = ug.group_id
+JOIN permissions p ON p.id = gp.permission_id
+WHERE ug.user_id = '<user_id>'
+ORDER BY p.name;
+```
+
+### View All Users in a Group
+
+```sql
+SELECT u.id, u.name, u.email, u.status
+FROM user_groups ug
+JOIN users u ON u.id = ug.user_id
+WHERE ug.group_id = '<group_id>'
+ORDER BY u.name;
+```
+
+### View All Groups in an Entity
+
+```sql
+SELECT pg.id, pg.name, pg.is_super_admin,
+       COUNT(gp.permission_id) AS permission_count
+FROM permission_groups pg
+LEFT JOIN group_permissions gp ON gp.group_id = pg.id
+WHERE pg.entity_id = '<entity_id>'
+GROUP BY pg.id
+ORDER BY pg.name;
+```
+
+### View All Entities a User Has Access To
+
+```sql
+SELECT e.id, e.name
+FROM user_entities ue
+JOIN entities e ON e.id = ue.entity_id
+WHERE ue.user_id = '<user_id>'
+ORDER BY e.name;
+```
+
+### Check if a User Has a Specific Permission
+
+```sql
+SELECT EXISTS (
+  SELECT 1
+  FROM user_groups ug
+  JOIN group_permissions gp ON gp.group_id = ug.group_id
+  JOIN permissions p ON p.id = gp.permission_id
+  WHERE ug.user_id = '<user_id>' AND p.name = 'create_transactions'
+) AS has_permission;
+```
+
+### Write an Audit Log Entry
+
+```sql
+INSERT INTO audit_logs (action, actor_id, target_type, target_id, details, organization_id, entity_id)
+VALUES (
+  'GROUP_PERMISSION_UPDATED',
+  '<admin_user_id>',
+  'permission_group',
+  '<group_id>',
+  'Added export_reports permission to Finance group',
+  '<org_id>',
+  '<entity_id>'
+);
+```
+
+---
+
+## 7. API Reference
 
 Minimum endpoints needed for a working RBAC system:
 
@@ -560,7 +963,7 @@ Minimum endpoints needed for a working RBAC system:
 
 ---
 
-## 7. Optional Add-on: Custody Wallets
+## 8. Optional Add-on: Custody Wallets
 
 If your platform manages crypto or fiat wallets, add this schema on top of the core RBAC system. This introduces accounts (optional wallet containers), wallets, and per-wallet group capabilities.
 
