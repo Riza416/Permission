@@ -120,6 +120,30 @@ The sidebar includes a **role switcher** (Super Admin / Admin / User) that chang
 
 ---
 
+## Scalability — Adding New Permissions
+
+The system is designed so that new permissions can be added without changing the group model, middleware logic, or any existing schema.
+
+**To add a new permission:**
+
+1. **Add a row to the permission registry** (a single migration):
+   ```
+   { name: 'reporting.export_csv', description: 'Export reports as CSV', scope: 'client' }
+   ```
+2. **Declare it on the relevant API endpoint** — the middleware already resolves user groups → permissions and checks the set
+3. **Admins assign it to groups** through the existing UI — no code changes needed
+
+**Why this scales:**
+
+- **Permissions are just strings in a registry table.** Groups hold an array of permission IDs, so adding a permission doesn't change any group schema.
+- **Middleware is declarative.** Each endpoint declares which permission(s) it requires. The middleware resolves the user's groups into a permission set and checks membership. New permissions work automatically.
+- **Groups are generic.** A group is a name + a bag of permission IDs. It works with any permission in the registry, present or future.
+- **Wallet capabilities follow the same pattern.** `custody.wallet.create`, `custody.wallet.send_transactions`, etc. are permissions in the registry like everything else. Adding `custody.wallet.freeze` or `payments.approve_batch` is the same flow: seed in registry → declare on endpoint → admins assign to groups.
+
+**Intentional constraint:** Permissions are system-defined (seeded via migration), not created by admins at runtime. This ensures the API layer always knows what permissions exist and can enforce them at the boundary.
+
+---
+
 ## Implementation Tickets
 
 See [TICKETS.md](TICKETS.md) for all 16 implementation tickets across 5 phases with user stories, definitions of done, and dependency maps.
