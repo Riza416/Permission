@@ -630,7 +630,7 @@ export interface CustodyWallet {
   address: string;
   organization_id: string;
   entity_id: string;
-  account_id: string;
+  account_id: string | null;
   group_assignments: WalletGroupAssignment[];
   status: 'active' | 'frozen';
   created_by: string;

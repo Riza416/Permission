@@ -578,7 +578,7 @@ function CreateWalletModal({
   onCreate,
 }: {
   onClose: () => void;
-  onCreate: (currency: string, label: string, entityId: string, accountId: string, initialAssignments: WalletGroupAssignment[]) => void;
+  onCreate: (currency: string, label: string, entityId: string, accountId: string | null, initialAssignments: WalletGroupAssignment[]) => void;
 }) {
   const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
@@ -668,11 +668,26 @@ function CreateWalletModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1.5">3</span>
                 Select Account
+                <span className="text-xs text-gray-400 font-normal ml-1">(optional)</span>
               </label>
               {entityAccounts.length === 0 ? (
-                <p className="text-xs text-gray-400 italic">No accounts in this entity yet.</p>
+                <p className="text-xs text-gray-400 italic">No accounts in this entity. You can skip this step and assign the wallet directly to groups.</p>
               ) : (
                 <div className="space-y-2">
+                  <button
+                    onClick={() => setSelectedAccount(null)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
+                      selectedAccount === null
+                        ? "border-gray-500 bg-gray-50 shadow-sm"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <Wallet className={`w-4 h-4 flex-shrink-0 ${selectedAccount === null ? "text-gray-600" : "text-gray-400"}`} />
+                    <div>
+                      <span className="text-sm text-gray-700 font-medium">No account (standalone wallet)</span>
+                      <p className="text-[10px] text-gray-400">Wallet will be assigned directly to groups without an account</p>
+                    </div>
+                  </button>
                   {entityAccounts.map((acc) => (
                     <button
                       key={acc.id}
@@ -695,7 +710,7 @@ function CreateWalletModal({
                 </div>
               )}
               <p className="text-[10px] text-gray-400 mt-1">
-                The wallet will be added to this account. An account groups related wallets within an entity.
+                Optionally group this wallet into an account. Accounts are a way to organize related wallets within an entity.
               </p>
             </div>
           )}
@@ -820,9 +835,9 @@ function CreateWalletModal({
           <button
             onClick={() => {
               if (selectedCurrency && label.trim() && selectedEntity && hasAtLeastOneGroup)
-                onCreate(selectedCurrency, label.trim(), selectedEntity, selectedAccount!, assignments);
+                onCreate(selectedCurrency, label.trim(), selectedEntity, selectedAccount, assignments);
             }}
-            disabled={!selectedCurrency || !label.trim() || !selectedEntity || !selectedAccount || !hasAtLeastOneGroup}
+            disabled={!selectedCurrency || !label.trim() || !selectedEntity || !hasAtLeastOneGroup}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Create Wallet
@@ -857,7 +872,7 @@ export default function CustodyWalletsPage() {
   });
   const uniqueCurrenciesInWallets = Array.from(new Set(wallets.map((w) => w.currency)));
 
-  function handleCreate(currency: string, label: string, entityId: string, accountId: string, initialAssignments: WalletGroupAssignment[]) {
+  function handleCreate(currency: string, label: string, entityId: string, accountId: string | null, initialAssignments: WalletGroupAssignment[]) {
     const curr = currencies.find((c) => c.code === currency);
     const newWallet: CustodyWallet = {
       id: `wallet-${currency.toLowerCase()}-${String(wallets.length + 1).padStart(2, "0")}`,
